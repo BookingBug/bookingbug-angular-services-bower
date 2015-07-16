@@ -82,6 +82,278 @@ agendaSelectAcrossWeek = FC.views.agenda.extend({
 $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
 
 (function() {
+  'use strict';
+  var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp = {}.hasOwnProperty;
+
+  angular.module('BB.Models').factory("Admin.PersonModel", function($q, BBModel, BaseModel) {
+    var Person;
+    return Person = (function(superClass) {
+      extend(Person, superClass);
+
+      function Person() {
+        return Person.__super__.constructor.apply(this, arguments);
+      }
+
+      return Person;
+
+    })(BBModel.Person);
+  });
+
+}).call(this);
+
+(function() {
+  'use strict';
+  var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp = {}.hasOwnProperty;
+
+  angular.module('BB.Models').factory("Admin.ResourceModel", function($q, BBModel, BaseModel) {
+    var Resource;
+    return Resource = (function(superClass) {
+      extend(Resource, superClass);
+
+      function Resource() {
+        return Resource.__super__.constructor.apply(this, arguments);
+      }
+
+      return Resource;
+
+    })(BBModel.Resource);
+  });
+
+}).call(this);
+
+(function() {
+  'use strict';
+  var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp = {}.hasOwnProperty;
+
+  angular.module('BB.Models').factory("Admin.ScheduleModel", function($q, BBModel, BaseModel) {
+    var Admin_Schedule;
+    return Admin_Schedule = (function(superClass) {
+      extend(Admin_Schedule, superClass);
+
+      function Admin_Schedule(data) {
+        Admin_Schedule.__super__.constructor.call(this, data);
+      }
+
+      return Admin_Schedule;
+
+    })(BaseModel);
+  });
+
+}).call(this);
+
+(function() {
+  'use strict';
+  var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
+
+  angular.module('BB.Models').factory("ScheduleRules", function() {
+    var ScheduleRules;
+    return ScheduleRules = (function() {
+      function ScheduleRules(rules) {
+        if (rules == null) {
+          rules = {};
+        }
+        this.removeRangeFromDate = bind(this.removeRangeFromDate, this);
+        this.addRangeToDate = bind(this.addRangeToDate, this);
+        this.rules = rules;
+      }
+
+      ScheduleRules.prototype.addRange = function(start, end) {
+        return this.applyFunctionToDateRange(start, end, 'YYYY-MM-DD', this.addRangeToDate);
+      };
+
+      ScheduleRules.prototype.removeRange = function(start, end) {
+        return this.applyFunctionToDateRange(start, end, 'YYYY-MM-DD', this.removeRangeFromDate);
+      };
+
+      ScheduleRules.prototype.addWeekdayRange = function(start, end) {
+        return this.applyFunctionToDateRange(start, end, 'd', this.addRangeToDate);
+      };
+
+      ScheduleRules.prototype.removeWeekdayRange = function(start, end) {
+        return this.applyFunctionToDateRange(start, end, 'd', this.removeRangeFromDate);
+      };
+
+      ScheduleRules.prototype.addRangeToDate = function(date, range) {
+        var ranges;
+        ranges = this.rules[date] ? this.rules[date].split(',') : [];
+        return this.rules[date] = this.joinRanges(this.insertRange(ranges, range));
+      };
+
+      ScheduleRules.prototype.removeRangeFromDate = function(date, range) {
+        var ranges;
+        ranges = this.rules[date] ? this.rules[date].split(',') : [];
+        this.rules[date] = this.joinRanges(this.subtractRange(ranges, range));
+        if (this.rules[date] === '') {
+          return delete this.rules[date];
+        }
+      };
+
+      ScheduleRules.prototype.applyFunctionToDateRange = function(start, end, format, func) {
+        var date, days, end_time, j, range, results;
+        days = this.diffInDays(start, end);
+        if (days === 0) {
+          date = start.format(format);
+          range = [start.format('HHmm'), end.format('HHmm')].join('-');
+          func(date, range);
+        } else {
+          end_time = moment(start).endOf('day');
+          this.applyFunctionToDateRange(start, end_time, format, func);
+          _.each((function() {
+            results = [];
+            for (var j = 1; 1 <= days ? j <= days : j >= days; 1 <= days ? j++ : j--){ results.push(j); }
+            return results;
+          }).apply(this), (function(_this) {
+            return function(i) {
+              var start_time;
+              date = moment(start).add(i, 'days');
+              if (i === days) {
+                if (!(end.hour() === 0 && end.minute() === 0)) {
+                  start_time = moment(end).startOf('day');
+                  return _this.applyFunctionToDateRange(start_time, end, format, func);
+                }
+              } else {
+                start_time = moment(date).startOf('day');
+                end_time = moment(date).endOf('day');
+                return _this.applyFunctionToDateRange(start_time, end_time, format, func);
+              }
+            };
+          })(this));
+        }
+        return this.rules;
+      };
+
+      ScheduleRules.prototype.diffInDays = function(start, end) {
+        return moment.duration(end.diff(start)).days();
+      };
+
+      ScheduleRules.prototype.insertRange = function(ranges, range) {
+        ranges.splice(_.sortedIndex(ranges, range), 0, range);
+        return ranges;
+      };
+
+      ScheduleRules.prototype.subtractRange = function(ranges, range) {
+        if (_.indexOf(ranges, range, true) > -1) {
+          return _.without(ranges, range);
+        } else {
+          return _.flatten(_.map(ranges, function(r) {
+            if (range.slice(0, 4) >= r.slice(0, 4) && range.slice(5, 9) <= r.slice(5, 9)) {
+              if (range.slice(0, 4) === r.slice(0, 4)) {
+                return [range.slice(5, 9), r.slice(5, 9)].join('-');
+              } else if (range.slice(5, 9) === r.slice(5, 9)) {
+                return [r.slice(0, 4), range.slice(0, 4)].join('-');
+              } else {
+                return [[r.slice(0, 4), range.slice(0, 4)].join('-'), [range.slice(5, 9), r.slice(5, 9)].join('-')];
+              }
+            } else {
+              return r;
+            }
+          }));
+        }
+      };
+
+      ScheduleRules.prototype.joinRanges = function(ranges) {
+        return _.reduce(ranges, function(m, range) {
+          if (m === '') {
+            return range;
+          } else if (range.slice(0, 4) <= m.slice(m.length - 4, m.length)) {
+            if (range.slice(5, 9) >= m.slice(m.length - 4, m.length)) {
+              return m.slice(0, m.length - 4) + range.slice(5, 9);
+            } else {
+              return m;
+            }
+          } else {
+            return [m, range].join();
+          }
+        }, "");
+      };
+
+      ScheduleRules.prototype.filterRulesByDates = function() {
+        return _.pick(this.rules, function(value, key) {
+          return key.match(/^\d{4}-\d{2}-\d{2}$/);
+        });
+      };
+
+      ScheduleRules.prototype.filterRulesByWeekdays = function() {
+        return _.pick(this.rules, function(value, key) {
+          return key.match(/^\d$/);
+        });
+      };
+
+      ScheduleRules.prototype.formatTime = function(time) {
+        return [time.slice(0, 2), time.slice(2, 4)].join(':');
+      };
+
+      ScheduleRules.prototype.toEvents = function(d) {
+        if (d) {
+          return _.map(this.rules[d].split(','), (function(_this) {
+            return function(range) {
+              return {
+                start: [d, _this.formatTime(range.split('-')[0])].join('T'),
+                end: [d, _this.formatTime(range.split('-')[1])].join('T')
+              };
+            };
+          })(this));
+        } else {
+          return _.reduce(this.filterRulesByDates(), (function(_this) {
+            return function(memo, ranges, date) {
+              return memo.concat(_.map(ranges.split(','), function(range) {
+                return {
+                  start: [date, _this.formatTime(range.split('-')[0])].join('T'),
+                  end: [date, _this.formatTime(range.split('-')[1])].join('T')
+                };
+              }));
+            };
+          })(this), []);
+        }
+      };
+
+      ScheduleRules.prototype.toWeekdayEvents = function() {
+        return _.reduce(this.filterRulesByWeekdays(), (function(_this) {
+          return function(memo, ranges, day) {
+            var date;
+            date = moment().set('day', day).format('YYYY-MM-DD');
+            return memo.concat(_.map(ranges.split(','), function(range) {
+              return {
+                start: [date, _this.formatTime(range.split('-')[0])].join('T'),
+                end: [date, _this.formatTime(range.split('-')[1])].join('T')
+              };
+            }));
+          };
+        })(this), []);
+      };
+
+      return ScheduleRules;
+
+    })();
+  });
+
+}).call(this);
+
+(function() {
+  'use strict';
+  var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp = {}.hasOwnProperty;
+
+  angular.module('BB.Models').factory("Admin.ServiceModel", function($q, BBModel, BaseModel) {
+    var Service;
+    return Service = (function(superClass) {
+      extend(Service, superClass);
+
+      function Service() {
+        return Service.__super__.constructor.apply(this, arguments);
+      }
+
+      return Service;
+
+    })(BBModel.Service);
+  });
+
+}).call(this);
+
+(function() {
   angular.module('BBAdminServices').directive('personTable', function(AdminCompanyService, AdminPersonService, $log, ModalForm) {
     var controller, link;
     controller = function($scope) {
@@ -578,278 +850,6 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
       link: link,
       templateUrl: 'service_table_main.html'
     };
-  });
-
-}).call(this);
-
-(function() {
-  'use strict';
-  var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
-
-  angular.module('BB.Models').factory("Admin.PersonModel", function($q, BBModel, BaseModel) {
-    var Person;
-    return Person = (function(superClass) {
-      extend(Person, superClass);
-
-      function Person() {
-        return Person.__super__.constructor.apply(this, arguments);
-      }
-
-      return Person;
-
-    })(BBModel.Person);
-  });
-
-}).call(this);
-
-(function() {
-  'use strict';
-  var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
-
-  angular.module('BB.Models').factory("Admin.ResourceModel", function($q, BBModel, BaseModel) {
-    var Resource;
-    return Resource = (function(superClass) {
-      extend(Resource, superClass);
-
-      function Resource() {
-        return Resource.__super__.constructor.apply(this, arguments);
-      }
-
-      return Resource;
-
-    })(BBModel.Resource);
-  });
-
-}).call(this);
-
-(function() {
-  'use strict';
-  var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
-
-  angular.module('BB.Models').factory("Admin.ScheduleModel", function($q, BBModel, BaseModel) {
-    var Admin_Schedule;
-    return Admin_Schedule = (function(superClass) {
-      extend(Admin_Schedule, superClass);
-
-      function Admin_Schedule(data) {
-        Admin_Schedule.__super__.constructor.call(this, data);
-      }
-
-      return Admin_Schedule;
-
-    })(BaseModel);
-  });
-
-}).call(this);
-
-(function() {
-  'use strict';
-  var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
-
-  angular.module('BB.Models').factory("ScheduleRules", function() {
-    var ScheduleRules;
-    return ScheduleRules = (function() {
-      function ScheduleRules(rules) {
-        if (rules == null) {
-          rules = {};
-        }
-        this.removeRangeFromDate = bind(this.removeRangeFromDate, this);
-        this.addRangeToDate = bind(this.addRangeToDate, this);
-        this.rules = rules;
-      }
-
-      ScheduleRules.prototype.addRange = function(start, end) {
-        return this.applyFunctionToDateRange(start, end, 'YYYY-MM-DD', this.addRangeToDate);
-      };
-
-      ScheduleRules.prototype.removeRange = function(start, end) {
-        return this.applyFunctionToDateRange(start, end, 'YYYY-MM-DD', this.removeRangeFromDate);
-      };
-
-      ScheduleRules.prototype.addWeekdayRange = function(start, end) {
-        return this.applyFunctionToDateRange(start, end, 'd', this.addRangeToDate);
-      };
-
-      ScheduleRules.prototype.removeWeekdayRange = function(start, end) {
-        return this.applyFunctionToDateRange(start, end, 'd', this.removeRangeFromDate);
-      };
-
-      ScheduleRules.prototype.addRangeToDate = function(date, range) {
-        var ranges;
-        ranges = this.rules[date] ? this.rules[date].split(',') : [];
-        return this.rules[date] = this.joinRanges(this.insertRange(ranges, range));
-      };
-
-      ScheduleRules.prototype.removeRangeFromDate = function(date, range) {
-        var ranges;
-        ranges = this.rules[date] ? this.rules[date].split(',') : [];
-        this.rules[date] = this.joinRanges(this.subtractRange(ranges, range));
-        if (this.rules[date] === '') {
-          return delete this.rules[date];
-        }
-      };
-
-      ScheduleRules.prototype.applyFunctionToDateRange = function(start, end, format, func) {
-        var date, days, end_time, j, range, results;
-        days = this.diffInDays(start, end);
-        if (days === 0) {
-          date = start.format(format);
-          range = [start.format('HHmm'), end.format('HHmm')].join('-');
-          func(date, range);
-        } else {
-          end_time = moment(start).endOf('day');
-          this.applyFunctionToDateRange(start, end_time, format, func);
-          _.each((function() {
-            results = [];
-            for (var j = 1; 1 <= days ? j <= days : j >= days; 1 <= days ? j++ : j--){ results.push(j); }
-            return results;
-          }).apply(this), (function(_this) {
-            return function(i) {
-              var start_time;
-              date = moment(start).add(i, 'days');
-              if (i === days) {
-                if (!(end.hour() === 0 && end.minute() === 0)) {
-                  start_time = moment(end).startOf('day');
-                  return _this.applyFunctionToDateRange(start_time, end, format, func);
-                }
-              } else {
-                start_time = moment(date).startOf('day');
-                end_time = moment(date).endOf('day');
-                return _this.applyFunctionToDateRange(start_time, end_time, format, func);
-              }
-            };
-          })(this));
-        }
-        return this.rules;
-      };
-
-      ScheduleRules.prototype.diffInDays = function(start, end) {
-        return moment.duration(end.diff(start)).days();
-      };
-
-      ScheduleRules.prototype.insertRange = function(ranges, range) {
-        ranges.splice(_.sortedIndex(ranges, range), 0, range);
-        return ranges;
-      };
-
-      ScheduleRules.prototype.subtractRange = function(ranges, range) {
-        if (_.indexOf(ranges, range, true) > -1) {
-          return _.without(ranges, range);
-        } else {
-          return _.flatten(_.map(ranges, function(r) {
-            if (range.slice(0, 4) >= r.slice(0, 4) && range.slice(5, 9) <= r.slice(5, 9)) {
-              if (range.slice(0, 4) === r.slice(0, 4)) {
-                return [range.slice(5, 9), r.slice(5, 9)].join('-');
-              } else if (range.slice(5, 9) === r.slice(5, 9)) {
-                return [r.slice(0, 4), range.slice(0, 4)].join('-');
-              } else {
-                return [[r.slice(0, 4), range.slice(0, 4)].join('-'), [range.slice(5, 9), r.slice(5, 9)].join('-')];
-              }
-            } else {
-              return r;
-            }
-          }));
-        }
-      };
-
-      ScheduleRules.prototype.joinRanges = function(ranges) {
-        return _.reduce(ranges, function(m, range) {
-          if (m === '') {
-            return range;
-          } else if (range.slice(0, 4) <= m.slice(m.length - 4, m.length)) {
-            if (range.slice(5, 9) >= m.slice(m.length - 4, m.length)) {
-              return m.slice(0, m.length - 4) + range.slice(5, 9);
-            } else {
-              return m;
-            }
-          } else {
-            return [m, range].join();
-          }
-        }, "");
-      };
-
-      ScheduleRules.prototype.filterRulesByDates = function() {
-        return _.pick(this.rules, function(value, key) {
-          return key.match(/^\d{4}-\d{2}-\d{2}$/);
-        });
-      };
-
-      ScheduleRules.prototype.filterRulesByWeekdays = function() {
-        return _.pick(this.rules, function(value, key) {
-          return key.match(/^\d$/);
-        });
-      };
-
-      ScheduleRules.prototype.formatTime = function(time) {
-        return [time.slice(0, 2), time.slice(2, 4)].join(':');
-      };
-
-      ScheduleRules.prototype.toEvents = function(d) {
-        if (d) {
-          return _.map(this.rules[d].split(','), (function(_this) {
-            return function(range) {
-              return {
-                start: [d, _this.formatTime(range.split('-')[0])].join('T'),
-                end: [d, _this.formatTime(range.split('-')[1])].join('T')
-              };
-            };
-          })(this));
-        } else {
-          return _.reduce(this.filterRulesByDates(), (function(_this) {
-            return function(memo, ranges, date) {
-              return memo.concat(_.map(ranges.split(','), function(range) {
-                return {
-                  start: [date, _this.formatTime(range.split('-')[0])].join('T'),
-                  end: [date, _this.formatTime(range.split('-')[1])].join('T')
-                };
-              }));
-            };
-          })(this), []);
-        }
-      };
-
-      ScheduleRules.prototype.toWeekdayEvents = function() {
-        return _.reduce(this.filterRulesByWeekdays(), (function(_this) {
-          return function(memo, ranges, day) {
-            var date;
-            date = moment().set('day', day).format('YYYY-MM-DD');
-            return memo.concat(_.map(ranges.split(','), function(range) {
-              return {
-                start: [date, _this.formatTime(range.split('-')[0])].join('T'),
-                end: [date, _this.formatTime(range.split('-')[1])].join('T')
-              };
-            }));
-          };
-        })(this), []);
-      };
-
-      return ScheduleRules;
-
-    })();
-  });
-
-}).call(this);
-
-(function() {
-  'use strict';
-  var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
-
-  angular.module('BB.Models').factory("Admin.ServiceModel", function($q, BBModel, BaseModel) {
-    var Service;
-    return Service = (function(superClass) {
-      extend(Service, superClass);
-
-      function Service() {
-        return Service.__super__.constructor.apply(this, arguments);
-      }
-
-      return Service;
-
-    })(BBModel.Service);
   });
 
 }).call(this);
