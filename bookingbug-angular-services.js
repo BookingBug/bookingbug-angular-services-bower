@@ -82,6 +82,208 @@ agendaSelectAcrossWeek = FC.views.agenda.class.extend({
 $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
 
 (function() {
+  angular.module('BBAdminServices').factory('AdminPersonService', function($q, $window, $rootScope, halClient, SlotCollections, BBModel, LoginService, $log) {
+    return {
+      query: function(params) {
+        var company, defer;
+        company = params.company;
+        defer = $q.defer();
+        if (company.$has('people')) {
+          company.$get('people').then(function(collection) {
+            return collection.$get('people').then(function(people) {
+              var models, p;
+              models = (function() {
+                var i, len, results;
+                results = [];
+                for (i = 0, len = people.length; i < len; i++) {
+                  p = people[i];
+                  results.push(new BBModel.Person(p));
+                }
+                return results;
+              })();
+              return defer.resolve(models);
+            }, function(err) {
+              return defer.reject(err);
+            });
+          }, function(err) {
+            return defer.reject(err);
+          });
+        } else {
+          $log.warn('company has no people link');
+          defer.reject('company has no people link');
+        }
+        return defer.promise;
+      },
+      block: function(company, person, data) {
+        var deferred, href, prms, uri;
+        prms = {
+          id: person.id,
+          company_id: company.id
+        };
+        deferred = $q.defer();
+        href = "/api/v1/admin/{company_id}/people/{id}/block";
+        uri = new $window.UriTemplate.parse(href).expand(prms || {});
+        halClient.$put(uri, {}, data).then((function(_this) {
+          return function(slot) {
+            slot = new BBModel.Admin.Slot(slot);
+            SlotCollections.checkItems(slot);
+            return deferred.resolve(slot);
+          };
+        })(this), (function(_this) {
+          return function(err) {
+            return deferred.reject(err);
+          };
+        })(this));
+        return deferred.promise;
+      },
+      signup: function(user, data) {
+        var defer;
+        defer = $q.defer();
+        return user.$get('company').then(function(company) {
+          var params;
+          params = {};
+          company.$post('people', params, data).then(function(person) {
+            if (person.$has('administrator')) {
+              return person.$get('administrator').then(function(user) {
+                LoginService.setLogin(user);
+                return defer.resolve(person);
+              });
+            } else {
+              return defer.resolve(person);
+            }
+          }, function(err) {
+            return defer.reject(err);
+          });
+          return defer.promise;
+        });
+      }
+    };
+  });
+
+}).call(this);
+
+(function() {
+  angular.module('BBAdminServices').factory('AdminResourceService', function($q, $window, halClient, SlotCollections, BBModel) {
+    return {
+      query: function(params) {
+        var company, defer;
+        company = params.company;
+        defer = $q.defer();
+        company.$get('resources').then(function(collection) {
+          return collection.$get('resources').then(function(resources) {
+            var models, r;
+            models = (function() {
+              var i, len, results;
+              results = [];
+              for (i = 0, len = resources.length; i < len; i++) {
+                r = resources[i];
+                results.push(new BBModel.Resource(r));
+              }
+              return results;
+            })();
+            return defer.resolve(models);
+          }, function(err) {
+            return defer.reject(err);
+          });
+        }, function(err) {
+          return defer.reject(err);
+        });
+        return defer.promise;
+      },
+      block: function(company, resource, data) {
+        var deferred, href, prms, uri;
+        prms = {
+          id: resource.id,
+          company_id: company.id
+        };
+        deferred = $q.defer();
+        href = "/api/v1/admin/{company_id}/resource/{id}/block";
+        uri = new $window.UriTemplate.parse(href).expand(prms || {});
+        halClient.$put(uri, {}, data).then((function(_this) {
+          return function(slot) {
+            slot = new BBModel.Admin.Slot(slot);
+            SlotCollections.checkItems(slot);
+            return deferred.resolve(slot);
+          };
+        })(this), (function(_this) {
+          return function(err) {
+            return deferred.reject(err);
+          };
+        })(this));
+        return deferred.promise;
+      }
+    };
+  });
+
+}).call(this);
+
+(function() {
+  angular.module('BBAdminServices').factory('AdminScheduleService', function($q, BBModel) {
+    return {
+      query: function(params) {
+        var company, defer;
+        company = params.company;
+        defer = $q.defer();
+        company.$get('schedules').then(function(collection) {
+          return collection.$get('schedules').then(function(schedules) {
+            var models, s;
+            models = (function() {
+              var i, len, results;
+              results = [];
+              for (i = 0, len = schedules.length; i < len; i++) {
+                s = schedules[i];
+                results.push(new BBModel.Admin.Schedule(s));
+              }
+              return results;
+            })();
+            return defer.resolve(models);
+          }, function(err) {
+            return defer.reject(err);
+          });
+        }, function(err) {
+          return defer.reject(err);
+        });
+        return defer.promise;
+      }
+    };
+  });
+
+}).call(this);
+
+(function() {
+  angular.module('BBAdmin.Services').factory('AdminServiceService', function($q, BBModel, $log) {
+    return {
+      query: function(params) {
+        var company, defer;
+        company = params.company;
+        defer = $q.defer();
+        company.$get('services').then(function(collection) {
+          return collection.$get('services').then(function(services) {
+            var models, s;
+            models = (function() {
+              var i, len, results;
+              results = [];
+              for (i = 0, len = services.length; i < len; i++) {
+                s = services[i];
+                results.push(new BBModel.Service(s));
+              }
+              return results;
+            })();
+            return defer.resolve(models);
+          }, function(err) {
+            return defer.reject(err);
+          });
+        }, function(err) {
+          return defer.reject(err);
+        });
+        return defer.promise;
+      }
+    };
+  });
+
+}).call(this);
+
+(function() {
   'use strict';
   var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
@@ -849,208 +1051,6 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
       controller: controller,
       link: link,
       templateUrl: 'service_table_main.html'
-    };
-  });
-
-}).call(this);
-
-(function() {
-  angular.module('BBAdminServices').factory('AdminPersonService', function($q, $window, $rootScope, halClient, SlotCollections, BBModel, LoginService, $log) {
-    return {
-      query: function(params) {
-        var company, defer;
-        company = params.company;
-        defer = $q.defer();
-        if (company.$has('people')) {
-          company.$get('people').then(function(collection) {
-            return collection.$get('people').then(function(people) {
-              var models, p;
-              models = (function() {
-                var i, len, results;
-                results = [];
-                for (i = 0, len = people.length; i < len; i++) {
-                  p = people[i];
-                  results.push(new BBModel.Person(p));
-                }
-                return results;
-              })();
-              return defer.resolve(models);
-            }, function(err) {
-              return defer.reject(err);
-            });
-          }, function(err) {
-            return defer.reject(err);
-          });
-        } else {
-          $log.warn('company has no people link');
-          defer.reject('company has no people link');
-        }
-        return defer.promise;
-      },
-      block: function(company, person, data) {
-        var deferred, href, prms, uri;
-        prms = {
-          id: person.id,
-          company_id: company.id
-        };
-        deferred = $q.defer();
-        href = "/api/v1/admin/{company_id}/people/{id}/block";
-        uri = new $window.UriTemplate.parse(href).expand(prms || {});
-        halClient.$put(uri, {}, data).then((function(_this) {
-          return function(slot) {
-            slot = new BBModel.Admin.Slot(slot);
-            SlotCollections.checkItems(slot);
-            return deferred.resolve(slot);
-          };
-        })(this), (function(_this) {
-          return function(err) {
-            return deferred.reject(err);
-          };
-        })(this));
-        return deferred.promise;
-      },
-      signup: function(user, data) {
-        var defer;
-        defer = $q.defer();
-        return user.$get('company').then(function(company) {
-          var params;
-          params = {};
-          company.$post('people', params, data).then(function(person) {
-            if (person.$has('administrator')) {
-              return person.$get('administrator').then(function(user) {
-                LoginService.setLogin(user);
-                return defer.resolve(person);
-              });
-            } else {
-              return defer.resolve(person);
-            }
-          }, function(err) {
-            return defer.reject(err);
-          });
-          return defer.promise;
-        });
-      }
-    };
-  });
-
-}).call(this);
-
-(function() {
-  angular.module('BBAdminServices').factory('AdminResourceService', function($q, $window, halClient, SlotCollections, BBModel) {
-    return {
-      query: function(params) {
-        var company, defer;
-        company = params.company;
-        defer = $q.defer();
-        company.$get('resources').then(function(collection) {
-          return collection.$get('resources').then(function(resources) {
-            var models, r;
-            models = (function() {
-              var i, len, results;
-              results = [];
-              for (i = 0, len = resources.length; i < len; i++) {
-                r = resources[i];
-                results.push(new BBModel.Resource(r));
-              }
-              return results;
-            })();
-            return defer.resolve(models);
-          }, function(err) {
-            return defer.reject(err);
-          });
-        }, function(err) {
-          return defer.reject(err);
-        });
-        return defer.promise;
-      },
-      block: function(company, resource, data) {
-        var deferred, href, prms, uri;
-        prms = {
-          id: resource.id,
-          company_id: company.id
-        };
-        deferred = $q.defer();
-        href = "/api/v1/admin/{company_id}/resource/{id}/block";
-        uri = new $window.UriTemplate.parse(href).expand(prms || {});
-        halClient.$put(uri, {}, data).then((function(_this) {
-          return function(slot) {
-            slot = new BBModel.Admin.Slot(slot);
-            SlotCollections.checkItems(slot);
-            return deferred.resolve(slot);
-          };
-        })(this), (function(_this) {
-          return function(err) {
-            return deferred.reject(err);
-          };
-        })(this));
-        return deferred.promise;
-      }
-    };
-  });
-
-}).call(this);
-
-(function() {
-  angular.module('BBAdminServices').factory('AdminScheduleService', function($q, BBModel) {
-    return {
-      query: function(params) {
-        var company, defer;
-        company = params.company;
-        defer = $q.defer();
-        company.$get('schedules').then(function(collection) {
-          return collection.$get('schedules').then(function(schedules) {
-            var models, s;
-            models = (function() {
-              var i, len, results;
-              results = [];
-              for (i = 0, len = schedules.length; i < len; i++) {
-                s = schedules[i];
-                results.push(new BBModel.Admin.Schedule(s));
-              }
-              return results;
-            })();
-            return defer.resolve(models);
-          }, function(err) {
-            return defer.reject(err);
-          });
-        }, function(err) {
-          return defer.reject(err);
-        });
-        return defer.promise;
-      }
-    };
-  });
-
-}).call(this);
-
-(function() {
-  angular.module('BBAdmin.Services').factory('AdminServiceService', function($q, BBModel, $log) {
-    return {
-      query: function(params) {
-        var company, defer;
-        company = params.company;
-        defer = $q.defer();
-        company.$get('services').then(function(collection) {
-          return collection.$get('services').then(function(services) {
-            var models, s;
-            models = (function() {
-              var i, len, results;
-              results = [];
-              for (i = 0, len = services.length; i < len; i++) {
-                s = services[i];
-                results.push(new BBModel.Service(s));
-              }
-              return results;
-            })();
-            return defer.resolve(models);
-          }, function(err) {
-            return defer.reject(err);
-          });
-        }, function(err) {
-          return defer.reject(err);
-        });
-        return defer.promise;
-      }
     };
   });
 
