@@ -584,13 +584,13 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
 
 (function() {
   'use strict';
-  var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
+  var __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    __hasProp = {}.hasOwnProperty;
 
   angular.module('BB.Models').factory("Admin.PersonModel", function($q, BBModel, BaseModel) {
     var Person;
-    return Person = (function(superClass) {
-      extend(Person, superClass);
+    return Person = (function(_super) {
+      __extends(Person, _super);
 
       function Person() {
         return Person.__super__.constructor.apply(this, arguments);
@@ -605,13 +605,13 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
 
 (function() {
   'use strict';
-  var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
+  var __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    __hasProp = {}.hasOwnProperty;
 
   angular.module('BB.Models').factory("Admin.ResourceModel", function($q, BBModel, BaseModel) {
     var Resource;
-    return Resource = (function(superClass) {
-      extend(Resource, superClass);
+    return Resource = (function(_super) {
+      __extends(Resource, _super);
 
       function Resource() {
         return Resource.__super__.constructor.apply(this, arguments);
@@ -626,13 +626,13 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
 
 (function() {
   'use strict';
-  var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
+  var __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    __hasProp = {}.hasOwnProperty;
 
   angular.module('BB.Models').factory("Admin.ScheduleModel", function($q, BBModel, BaseModel) {
     var Admin_Schedule;
-    return Admin_Schedule = (function(superClass) {
-      extend(Admin_Schedule, superClass);
+    return Admin_Schedule = (function(_super) {
+      __extends(Admin_Schedule, _super);
 
       function Admin_Schedule(data) {
         Admin_Schedule.__super__.constructor.call(this, data);
@@ -647,7 +647,7 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
 
 (function() {
   'use strict';
-  var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
+  var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   angular.module('BB.Models').factory("ScheduleRules", function() {
     var ScheduleRules;
@@ -656,8 +656,8 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
         if (rules == null) {
           rules = {};
         }
-        this.removeRangeFromDate = bind(this.removeRangeFromDate, this);
-        this.addRangeToDate = bind(this.addRangeToDate, this);
+        this.removeRangeFromDate = __bind(this.removeRangeFromDate, this);
+        this.addRangeToDate = __bind(this.addRangeToDate, this);
         this.rules = rules;
       }
 
@@ -693,7 +693,7 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
       };
 
       ScheduleRules.prototype.applyFunctionToDateRange = function(start, end, format, func) {
-        var date, days, end_time, j, range, results;
+        var date, days, end_time, range, _i, _results;
         days = this.diffInDays(start, end);
         if (days === 0) {
           date = start.format(format);
@@ -703,9 +703,9 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
           end_time = moment(start).endOf('day');
           this.applyFunctionToDateRange(start, end_time, format, func);
           _.each((function() {
-            results = [];
-            for (var j = 1; 1 <= days ? j <= days : j >= days; 1 <= days ? j++ : j--){ results.push(j); }
-            return results;
+            _results = [];
+            for (var _i = 1; 1 <= days ? _i <= days : _i >= days; 1 <= days ? _i++ : _i--){ _results.push(_i); }
+            return _results;
           }).apply(this), (function(_this) {
             return function(i) {
               var start_time;
@@ -835,13 +835,13 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
 
 (function() {
   'use strict';
-  var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
+  var __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    __hasProp = {}.hasOwnProperty;
 
   angular.module('BB.Models').factory("Admin.ServiceModel", function($q, BBModel, BaseModel) {
     var Service;
-    return Service = (function(superClass) {
-      extend(Service, superClass);
+    return Service = (function(_super) {
+      __extends(Service, _super);
 
       function Service() {
         return Service.__super__.constructor.apply(this, arguments);
@@ -866,13 +866,13 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
             return collection.$get('people').then(function(people) {
               var models, p;
               models = (function() {
-                var i, len, results;
-                results = [];
-                for (i = 0, len = people.length; i < len; i++) {
-                  p = people[i];
-                  results.push(new BBModel.Person(p));
+                var _i, _len, _results;
+                _results = [];
+                for (_i = 0, _len = people.length; _i < _len; _i++) {
+                  p = people[_i];
+                  _results.push(new BBModel.Person(p));
                 }
-                return results;
+                return _results;
               })();
               return defer.resolve(models);
             }, function(err) {
@@ -946,13 +946,13 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
           return collection.$get('resources').then(function(resources) {
             var models, r;
             models = (function() {
-              var i, len, results;
-              results = [];
-              for (i = 0, len = resources.length; i < len; i++) {
-                r = resources[i];
-                results.push(new BBModel.Resource(r));
+              var _i, _len, _results;
+              _results = [];
+              for (_i = 0, _len = resources.length; _i < _len; _i++) {
+                r = resources[_i];
+                _results.push(new BBModel.Resource(r));
               }
-              return results;
+              return _results;
             })();
             return defer.resolve(models);
           }, function(err) {
@@ -1001,13 +1001,13 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
           return collection.$get('schedules').then(function(schedules) {
             var models, s;
             models = (function() {
-              var i, len, results;
-              results = [];
-              for (i = 0, len = schedules.length; i < len; i++) {
-                s = schedules[i];
-                results.push(new BBModel.Admin.Schedule(s));
+              var _i, _len, _results;
+              _results = [];
+              for (_i = 0, _len = schedules.length; _i < _len; _i++) {
+                s = schedules[_i];
+                _results.push(new BBModel.Admin.Schedule(s));
               }
-              return results;
+              return _results;
             })();
             return defer.resolve(models);
           }, function(err) {
@@ -1034,13 +1034,13 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
           return collection.$get('services').then(function(services) {
             var models, s;
             models = (function() {
-              var i, len, results;
-              results = [];
-              for (i = 0, len = services.length; i < len; i++) {
-                s = services[i];
-                results.push(new BBModel.Service(s));
+              var _i, _len, _results;
+              _results = [];
+              for (_i = 0, _len = services.length; _i < _len; _i++) {
+                s = services[_i];
+                _results.push(new BBModel.Service(s));
               }
-              return results;
+              return _results;
             })();
             return defer.resolve(models);
           }, function(err) {
