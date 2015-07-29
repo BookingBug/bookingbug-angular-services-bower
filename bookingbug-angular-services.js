@@ -1404,7 +1404,7 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
 }).call(this);
 
 (function() {
-  angular.module('BBAdmin.Services').factory('AdminResourceService', function($q, $window, halClient, SlotCollections, BBModel) {
+  angular.module('BBAdmin.Services').factory('AdminResourceService', function($q, UriTemplate, halClient, SlotCollections, BBModel) {
     return {
       query: function(params) {
         var company, defer;
@@ -1439,7 +1439,7 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
         };
         deferred = $q.defer();
         href = "/api/v1/admin/{company_id}/resource/{id}/block";
-        uri = new $window.UriTemplate.parse(href).expand(prms || {});
+        uri = new UriTemplate(href).fillFromObject(prms || {});
         halClient.$put(uri, {}, data).then((function(_this) {
           return function(slot) {
             slot = new BBModel.Admin.Slot(slot);
@@ -1518,6 +1518,17 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
           return defer.reject(err);
         });
         return defer.promise;
+      }
+    };
+  });
+
+}).call(this);
+
+(function() {
+  angular.module('BB.Services').factory("BB.Service.schedule", function($q, BBModel) {
+    return {
+      unwrap: function(resource) {
+        return new BBModel.Admin.Schedule(resource);
       }
     };
   });
