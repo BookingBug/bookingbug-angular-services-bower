@@ -990,6 +990,17 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
         Admin_Schedule.__super__.constructor.call(this, data);
       }
 
+      Admin_Schedule.prototype.getPostData = function() {
+        var data;
+        data = {};
+        data.id = this.id;
+        data.rules = this.rules;
+        data.name = this.name;
+        data.company_id = this.company_id;
+        data.duration = this.duration;
+        return data;
+      };
+
       return Admin_Schedule;
 
     })(BaseModel);
@@ -1485,6 +1496,35 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
           return defer.reject(err);
         });
         return defer.promise;
+      },
+      "delete": function(schedule) {
+        var deferred;
+        deferred = $q.defer();
+        schedule.$del('self').then((function(_this) {
+          return function(schedule) {
+            schedule = new BBModel.Admin.Schedule(schedule);
+            return deferred.resolve(schedule);
+          };
+        })(this), (function(_this) {
+          return function(err) {
+            return deferred.reject(err);
+          };
+        })(this));
+        return deferred.promise;
+      },
+      update: function(schedule) {
+        var deferred;
+        deferred = $q.defer();
+        return schedule.$put('self', {}, schedule.getPostData()).then((function(_this) {
+          return function(c) {
+            schedule = new BBModel.Admin.Schedule(c);
+            return deferred.resolve(schedule);
+          };
+        })(this), (function(_this) {
+          return function(err) {
+            return deferred.reject(err);
+          };
+        })(this));
       }
     };
   });
