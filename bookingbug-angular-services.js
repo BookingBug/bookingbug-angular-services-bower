@@ -83,6 +83,51 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
 
 
 (function() {
+  var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp = {}.hasOwnProperty;
+
+  window.Collection.Clinic = (function(superClass) {
+    extend(Clinic, superClass);
+
+    function Clinic() {
+      return Clinic.__super__.constructor.apply(this, arguments);
+    }
+
+    Clinic.prototype.checkItem = function(item) {
+      return Clinic.__super__.checkItem.apply(this, arguments);
+    };
+
+    Clinic.prototype.matchesParams = function(item) {
+      if (this.params.start_date) {
+        this.start_date || (this.start_date = moment(this.params.start_date));
+        if (this.start_date.isAfter(item.date)) {
+          return false;
+        }
+      }
+      if (this.params.end_date) {
+        this.end_date || (this.end_date = moment(this.params.end_date));
+        if (this.end_date.isBefore(item.date)) {
+          return false;
+        }
+      }
+      return true;
+    };
+
+    return Clinic;
+
+  })(window.Collection.Base);
+
+  angular.module('BBAdmin.Services').provider("ClinicCollections", function() {
+    return {
+      $get: function() {
+        return new window.BaseCollections();
+      }
+    };
+  });
+
+}).call(this);
+
+(function() {
   angular.module('BBAdminServices').directive('personTable', function(AdminCompanyService, AdminPersonService, $log, ModalForm) {
     var controller, link;
     controller = function($scope) {
@@ -616,6 +661,107 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
   var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
+  angular.module('BB.Models').factory("Admin.ClinicModel", function($q, BBModel, BaseModel) {
+    var Admin_Clinic;
+    return Admin_Clinic = (function(superClass) {
+      extend(Admin_Clinic, superClass);
+
+      function Admin_Clinic(data) {
+        Admin_Clinic.__super__.constructor.call(this, data);
+        this.setTimes();
+        this.setResourcesAndPeople();
+      }
+
+      Admin_Clinic.prototype.setResourcesAndPeople = function() {
+        this.resources = _.reduce(this.resource_ids, function(h, id) {
+          h[id] = true;
+          return h;
+        }, {});
+        this.people = _.reduce(this.person_ids, function(h, id) {
+          h[id] = true;
+          return h;
+        }, {});
+        this.uncovered = !this.person_ids || this.person_ids.length === 0;
+        if (this.uncovered) {
+          return this.className = "clinic_uncovered";
+        } else {
+          return this.className = "clinic_covered";
+        }
+      };
+
+      Admin_Clinic.prototype.setTimes = function() {
+        if (this.start_time) {
+          this.start_time = moment(this.start_time);
+          this.start = this.start_time;
+        }
+        if (this.end_time) {
+          this.end_time = moment(this.end_time);
+          this.end = this.end_time;
+        }
+        return this.title = this.name;
+      };
+
+      Admin_Clinic.prototype.getPostData = function() {
+        var data, en, id, ref, ref1;
+        data = {};
+        data.name = this.name;
+        data.start_time = this.start_time;
+        data.end_time = this.end_time;
+        data.resource_ids = [];
+        ref = this.resources;
+        for (id in ref) {
+          en = ref[id];
+          if (en) {
+            data.resource_ids.push(id);
+          }
+        }
+        data.person_ids = [];
+        ref1 = this.people;
+        for (id in ref1) {
+          en = ref1[id];
+          if (en) {
+            data.person_ids.push(id);
+          }
+        }
+        console.log(this.address);
+        if (this.address) {
+          data.address_id = this.address.id;
+        }
+        return data;
+      };
+
+      Admin_Clinic.prototype.save = function() {
+        this.person_ids = _.compact(_.map(this.people, function(present, person_id) {
+          if (present) {
+            return person_id;
+          }
+        }));
+        this.resource_ids = _.compact(_.map(this.resources, function(present, person_id) {
+          if (present) {
+            return person_id;
+          }
+        }));
+        return this.$put('self', {}, this).then((function(_this) {
+          return function(clinic) {
+            _this.updateModel(clinic);
+            _this.setTimes();
+            return _this.setResourcesAndPeople();
+          };
+        })(this));
+      };
+
+      return Admin_Clinic;
+
+    })(BaseModel);
+  });
+
+}).call(this);
+
+(function() {
+  'use strict';
+  var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp = {}.hasOwnProperty;
+
   angular.module('BB.Models').factory("Admin.PersonModel", function($q, BBModel, BaseModel, PersonModel) {
     var Admin_Person;
     return Admin_Person = (function(superClass) {
@@ -843,6 +989,17 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
       function Admin_Schedule(data) {
         Admin_Schedule.__super__.constructor.call(this, data);
       }
+
+      Admin_Schedule.prototype.getPostData = function() {
+        var data;
+        data = {};
+        data.id = this.id;
+        data.rules = this.rules;
+        data.name = this.name;
+        data.company_id = this.company_id;
+        data.duration = this.duration;
+        return data;
+      };
 
       return Admin_Schedule;
 
@@ -1094,6 +1251,95 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
 }).call(this);
 
 (function() {
+  angular.module('BBAdmin.Services').factory('AdminClinicService', function($q, BBModel, ClinicCollections, $window) {
+    return {
+      query: function(params) {
+        var company, defer, existing;
+        company = params.company;
+        defer = $q.defer();
+        existing = ClinicCollections.find(params);
+        if (existing) {
+          defer.resolve(existing);
+        } else {
+          company.$get('clinics').then(function(collection) {
+            return collection.$get('clinics').then(function(clinics) {
+              var models, s;
+              models = (function() {
+                var i, len, results;
+                results = [];
+                for (i = 0, len = clinics.length; i < len; i++) {
+                  s = clinics[i];
+                  results.push(new BBModel.Admin.Clinic(s));
+                }
+                return results;
+              })();
+              clinics = new $window.Collection.Clinic(collection, models, params);
+              ClinicCollections.add(clinics);
+              return defer.resolve(clinics);
+            }, function(err) {
+              return defer.reject(err);
+            });
+          }, function(err) {
+            return defer.reject(err);
+          });
+        }
+        return defer.promise;
+      },
+      create: function(prms, clinic) {
+        var company, deferred;
+        company = prms.company;
+        deferred = $q.defer();
+        company.$post('clinics', {}, clinic.getPostData()).then((function(_this) {
+          return function(clinic) {
+            clinic = new BBModel.Admin.Clinic(clinic);
+            ClinicCollections.checkItems(clinic);
+            return deferred.resolve(clinic);
+          };
+        })(this), (function(_this) {
+          return function(err) {
+            return deferred.reject(err);
+          };
+        })(this));
+        return deferred.promise;
+      },
+      "delete": function(clinic) {
+        var deferred;
+        deferred = $q.defer();
+        clinic.$del('self').then((function(_this) {
+          return function(clinic) {
+            clinic = new BBModel.Admin.Clinic(clinic);
+            ClinicCollections.deleteItems(clinic);
+            return deferred.resolve(clinic);
+          };
+        })(this), (function(_this) {
+          return function(err) {
+            return deferred.reject(err);
+          };
+        })(this));
+        return deferred.promise;
+      },
+      update: function(clinic) {
+        var deferred;
+        deferred = $q.defer();
+        clinic.$put('self', {}, clinic.getPostData()).then((function(_this) {
+          return function(c) {
+            clinic = new BBModel.Admin.Clinic(c);
+            ClinicCollections.checkItems(clinic);
+            return deferred.resolve(clinic);
+          };
+        })(this), (function(_this) {
+          return function(err) {
+            return deferred.reject(err);
+          };
+        })(this));
+        return deferred.promise;
+      }
+    };
+  });
+
+}).call(this);
+
+(function() {
   angular.module('BBAdminServices').factory('AdminPersonService', function($q, $window, $rootScope, halClient, SlotCollections, BBModel, LoginService, $log) {
     return {
       query: function(params) {
@@ -1169,7 +1415,7 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
 }).call(this);
 
 (function() {
-  angular.module('BBAdmin.Services').factory('AdminResourceService', function($q, $window, halClient, SlotCollections, BBModel) {
+  angular.module('BBAdmin.Services').factory('AdminResourceService', function($q, UriTemplate, halClient, SlotCollections, BBModel) {
     return {
       query: function(params) {
         var company, defer;
@@ -1204,7 +1450,7 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
         };
         deferred = $q.defer();
         href = "/api/v1/admin/{company_id}/resource/{id}/block";
-        uri = new $window.UriTemplate.parse(href).expand(prms || {});
+        uri = new UriTemplate(href).fillFromObject(prms || {});
         halClient.$put(uri, {}, data).then((function(_this) {
           return function(slot) {
             slot = new BBModel.Admin.Slot(slot);
@@ -1250,6 +1496,35 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
           return defer.reject(err);
         });
         return defer.promise;
+      },
+      "delete": function(schedule) {
+        var deferred;
+        deferred = $q.defer();
+        schedule.$del('self').then((function(_this) {
+          return function(schedule) {
+            schedule = new BBModel.Admin.Schedule(schedule);
+            return deferred.resolve(schedule);
+          };
+        })(this), (function(_this) {
+          return function(err) {
+            return deferred.reject(err);
+          };
+        })(this));
+        return deferred.promise;
+      },
+      update: function(schedule) {
+        var deferred;
+        deferred = $q.defer();
+        return schedule.$put('self', {}, schedule.getPostData()).then((function(_this) {
+          return function(c) {
+            schedule = new BBModel.Admin.Schedule(c);
+            return deferred.resolve(schedule);
+          };
+        })(this), (function(_this) {
+          return function(err) {
+            return deferred.reject(err);
+          };
+        })(this));
       }
     };
   });
@@ -1283,6 +1558,17 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
           return defer.reject(err);
         });
         return defer.promise;
+      }
+    };
+  });
+
+}).call(this);
+
+(function() {
+  angular.module('BB.Services').factory("BB.Service.schedule", function($q, BBModel) {
+    return {
+      unwrap: function(resource) {
+        return new BBModel.Admin.Schedule(resource);
       }
     };
   });
