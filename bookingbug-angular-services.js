@@ -37,10 +37,10 @@ $.fullCalendar.Grid.prototype.setElement = function(el) {
 
 var FC = $.fullCalendar;
 var agendaSelectAcrossWeek
-agendaSelectAcrossWeek = FC.views.agenda.class.extend({
+agendaSelectAcrossWeek = FC.views.agenda['class'].extend({
 
   initialize: function() {
-    FC.views.agenda.class.prototype.initialize.apply(this);
+    FC.views.agenda['class'].prototype.initialize.apply(this);
     this.timeGrid.renderSelection = this.renderSelection;
   },
 
@@ -59,7 +59,7 @@ agendaSelectAcrossWeek = FC.views.agenda.class.extend({
 
   reportSelection: function(range, ev) {
     _.each(this.splitRange(range), function(r) {
-      FC.views.agenda.class.prototype.reportSelection.apply(this, [r, ev])
+      FC.views.agenda['class'].prototype.reportSelection.apply(this, [r, ev])
     }, this);
   },
 
