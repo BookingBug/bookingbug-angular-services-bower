@@ -661,49 +661,17 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
   var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
-  angular.module('BB.Models').factory("Admin.ClinicModel", function($q, BBModel, BaseModel) {
+  angular.module('BB.Models').factory("Admin.ClinicModel", function($q, BBModel, BaseModel, ClinicModel) {
     var Admin_Clinic;
     return Admin_Clinic = (function(superClass) {
       extend(Admin_Clinic, superClass);
 
-      function Admin_Clinic(data) {
-        Admin_Clinic.__super__.constructor.call(this, data);
-        this.setTimes();
-        this.setResourcesAndPeople();
-        this.settings || (this.settings = {});
+      function Admin_Clinic() {
+        return Admin_Clinic.__super__.constructor.apply(this, arguments);
       }
 
-      Admin_Clinic.prototype.setResourcesAndPeople = function() {
-        this.resources = _.reduce(this.resource_ids, function(h, id) {
-          h[id] = true;
-          return h;
-        }, {});
-        this.people = _.reduce(this.person_ids, function(h, id) {
-          h[id] = true;
-          return h;
-        }, {});
-        this.uncovered = !this.person_ids || this.person_ids.length === 0;
-        if (this.uncovered) {
-          return this.className = "clinic_uncovered";
-        } else {
-          return this.className = "clinic_covered";
-        }
-      };
-
-      Admin_Clinic.prototype.setTimes = function() {
-        if (this.start_time) {
-          this.start_time = moment(this.start_time);
-          this.start = this.start_time;
-        }
-        if (this.end_time) {
-          this.end_time = moment(this.end_time);
-          this.end = this.end_time;
-        }
-        return this.title = this.name;
-      };
-
       Admin_Clinic.prototype.getPostData = function() {
-        var data, en, id, ref, ref1;
+        var data, en, id, ref, ref1, ref2;
         data = {};
         data.name = this.name;
         data.start_time = this.start_time;
@@ -724,6 +692,14 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
             data.person_ids.push(id);
           }
         }
+        data.service_ids = [];
+        ref2 = this.services;
+        for (id in ref2) {
+          en = ref2[id];
+          if (en) {
+            data.service_ids.push(id);
+          }
+        }
         if (this.address) {
           data.address_id = this.address.id;
         }
@@ -739,9 +715,14 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
             return person_id;
           }
         }));
-        this.resource_ids = _.compact(_.map(this.resources, function(present, person_id) {
+        this.resource_ids = _.compact(_.map(this.resources, function(present, resource_id) {
           if (present) {
-            return person_id;
+            return resource_id;
+          }
+        }));
+        this.service_ids = _.compact(_.map(this.services, function(present, service_id) {
+          if (present) {
+            return service_id;
           }
         }));
         return this.$put('self', {}, this).then((function(_this) {
@@ -755,7 +736,7 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
 
       return Admin_Clinic;
 
-    })(BaseModel);
+    })(ClinicModel);
   });
 
 }).call(this);
