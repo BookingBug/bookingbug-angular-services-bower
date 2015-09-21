@@ -674,6 +674,7 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
         var data, en, id, ref, ref1, ref2;
         data = {};
         data.name = this.name;
+        data.repeat_rule = this.repeat_rule;
         data.start_time = this.start_time;
         data.end_time = this.end_time;
         data.resource_ids = [];
