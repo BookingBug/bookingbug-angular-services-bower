@@ -105,7 +105,7 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
         }
       }
       if (this.params.end_time) {
-        this.end_time || (this.end_time = moment(this.params.end_time));
+        this.end_date || (this.end_date = moment(this.params.end_time));
         if (this.end_time.isBefore(item.end_time)) {
           return false;
         }
