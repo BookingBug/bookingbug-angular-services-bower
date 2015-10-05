@@ -98,15 +98,15 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
     };
 
     Clinic.prototype.matchesParams = function(item) {
-      if (this.params.start_date) {
-        this.start_date || (this.start_date = moment(this.params.start_date));
-        if (this.start_date.isAfter(item.date)) {
+      if (this.params.start_time) {
+        this.start_time || (this.start_time = moment(this.params.start_time));
+        if (this.start_time.isAfter(item.start_time)) {
           return false;
         }
       }
-      if (this.params.end_date) {
-        this.end_date || (this.end_date = moment(this.params.end_date));
-        if (this.end_date.isBefore(item.date)) {
+      if (this.params.end_time) {
+        this.end_date || (this.end_date = moment(this.params.end_time));
+        if (this.end_time.isBefore(item.end_time)) {
           return false;
         }
       }
@@ -666,14 +666,53 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
     return Admin_Clinic = (function(superClass) {
       extend(Admin_Clinic, superClass);
 
-      function Admin_Clinic() {
-        return Admin_Clinic.__super__.constructor.apply(this, arguments);
+      function Admin_Clinic(data) {
+        var base;
+        Admin_Clinic.__super__.constructor.call(this, data);
+        this.repeat_rule || (this.repeat_rule = {});
+        (base = this.repeat_rule).rules || (base.rules = {});
       }
+
+      Admin_Clinic.prototype.calcRepeatRule = function() {
+        var en, id, ref, ref1, ref2, vals;
+        vals = {};
+        vals.name = this.name;
+        vals.start_time = this.start_time.format("HH:mm");
+        vals.end_time = this.end_time.format("HH:mm");
+        vals.address_id = this.address_id;
+        vals.resource_ids = [];
+        ref = this.resources;
+        for (id in ref) {
+          en = ref[id];
+          if (en) {
+            vals.resource_ids.push(id);
+          }
+        }
+        vals.person_ids = [];
+        ref1 = this.people;
+        for (id in ref1) {
+          en = ref1[id];
+          if (en) {
+            vals.person_ids.push(id);
+          }
+        }
+        vals.service_ids = [];
+        ref2 = this.services;
+        for (id in ref2) {
+          en = ref2[id];
+          if (en) {
+            vals.service_ids.push(id);
+          }
+        }
+        this.repeat_rule.properties = vals;
+        return this.repeat_rule;
+      };
 
       Admin_Clinic.prototype.getPostData = function() {
         var data, en, id, ref, ref1, ref2;
         data = {};
         data.name = this.name;
+        data.repeat_rule = this.repeat_rule;
         data.start_time = this.start_time;
         data.end_time = this.end_time;
         data.resource_ids = [];
@@ -705,6 +744,9 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
         }
         if (this.settings) {
           data.settings = this.settings;
+        }
+        if (this.repeat_rule && this.repeat_rule.rules && this.repeat_rule.rules.frequency) {
+          data.repeat_rule = this.calcRepeatRule();
         }
         return data;
       };
@@ -1258,6 +1300,7 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
     return {
       query: function(params) {
         var company, defer, existing;
+        console.log(params);
         company = params.company;
         defer = $q.defer();
         if (params.id) {
@@ -1270,8 +1313,10 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
         } else {
           existing = ClinicCollections.find(params);
           if (existing) {
+            console.log("existng", params, existing);
             defer.resolve(existing);
           } else {
+            console.log("-------");
             company.$get('clinics', params).then(function(collection) {
               return collection.$get('clinics').then(function(clinics) {
                 var models, s;
