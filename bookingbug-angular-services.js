@@ -105,7 +105,7 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
         }
       }
       if (this.params.end_time) {
-        this.end_date || (this.end_date = moment(this.params.end_time));
+        this.end_time || (this.end_time = moment(this.params.end_time));
         if (this.end_time.isBefore(item.end_time)) {
           return false;
         }
@@ -1300,7 +1300,6 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
     return {
       query: function(params) {
         var company, defer, existing;
-        console.log(params);
         company = params.company;
         defer = $q.defer();
         if (params.id) {
@@ -1313,10 +1312,8 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
         } else {
           existing = ClinicCollections.find(params);
           if (existing) {
-            console.log("existng", params, existing);
             defer.resolve(existing);
           } else {
-            console.log("-------");
             company.$get('clinics', params).then(function(collection) {
               return collection.$get('clinics').then(function(clinics) {
                 var models, s;
