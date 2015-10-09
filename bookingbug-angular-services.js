@@ -83,51 +83,6 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
 
 
 (function() {
-  var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
-
-  window.Collection.Clinic = (function(superClass) {
-    extend(Clinic, superClass);
-
-    function Clinic() {
-      return Clinic.__super__.constructor.apply(this, arguments);
-    }
-
-    Clinic.prototype.checkItem = function(item) {
-      return Clinic.__super__.checkItem.apply(this, arguments);
-    };
-
-    Clinic.prototype.matchesParams = function(item) {
-      if (this.params.start_time) {
-        this.start_time || (this.start_time = moment(this.params.start_time));
-        if (this.start_time.isAfter(item.start_time)) {
-          return false;
-        }
-      }
-      if (this.params.end_time) {
-        this.end_date || (this.end_date = moment(this.params.end_time));
-        if (this.end_time.isBefore(item.end_time)) {
-          return false;
-        }
-      }
-      return true;
-    };
-
-    return Clinic;
-
-  })(window.Collection.Base);
-
-  angular.module('BBAdmin.Services').provider("ClinicCollections", function() {
-    return {
-      $get: function() {
-        return new window.BaseCollections();
-      }
-    };
-  });
-
-}).call(this);
-
-(function() {
   angular.module('BBAdminServices').directive('personTable', function(AdminCompanyService, AdminPersonService, $log, ModalForm) {
     var controller, link;
     controller = function($scope) {
@@ -1300,7 +1255,6 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
     return {
       query: function(params) {
         var company, defer, existing;
-        console.log(params);
         company = params.company;
         defer = $q.defer();
         if (params.id) {
@@ -1313,10 +1267,8 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
         } else {
           existing = ClinicCollections.find(params);
           if (existing) {
-            console.log("existng", params, existing);
             defer.resolve(existing);
           } else {
-            console.log("-------");
             company.$get('clinics', params).then(function(collection) {
               return collection.$get('clinics').then(function(clinics) {
                 var models, s;
@@ -1728,6 +1680,51 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
           };
         })(this));
         return deferred.promise;
+      }
+    };
+  });
+
+}).call(this);
+
+(function() {
+  var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp = {}.hasOwnProperty;
+
+  window.Collection.Clinic = (function(superClass) {
+    extend(Clinic, superClass);
+
+    function Clinic() {
+      return Clinic.__super__.constructor.apply(this, arguments);
+    }
+
+    Clinic.prototype.checkItem = function(item) {
+      return Clinic.__super__.checkItem.apply(this, arguments);
+    };
+
+    Clinic.prototype.matchesParams = function(item) {
+      if (this.params.start_time) {
+        this.start_time || (this.start_time = moment(this.params.start_time));
+        if (this.start_time.isAfter(item.start_time)) {
+          return false;
+        }
+      }
+      if (this.params.end_time) {
+        this.end_time || (this.end_time = moment(this.params.end_time));
+        if (this.end_time.isBefore(item.end_time)) {
+          return false;
+        }
+      }
+      return true;
+    };
+
+    return Clinic;
+
+  })(window.Collection.Base);
+
+  angular.module('BBAdmin.Services').provider("ClinicCollections", function() {
+    return {
+      $get: function() {
+        return new window.BaseCollections();
       }
     };
   });
