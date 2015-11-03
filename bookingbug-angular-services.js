@@ -128,6 +128,507 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
 }).call(this);
 
 (function() {
+  angular.module('BBAdminServices').directive('personTable', function(AdminCompanyService, AdminPersonService, $log, ModalForm) {
+    var controller, link;
+    controller = function($scope) {
+      $scope.fields = ['id', 'name', 'mobile'];
+      $scope.getPeople = function() {
+        var params;
+        params = {
+          company: $scope.company
+        };
+        return AdminPersonService.query(params).then(function(people) {
+          return $scope.people = people;
+        });
+      };
+      $scope.newPerson = function() {
+        return ModalForm["new"]({
+          company: $scope.company,
+          title: 'New Person',
+          new_rel: 'new_person',
+          post_rel: 'people',
+          success: function(person) {
+            return $scope.people.push(person);
+          }
+        });
+      };
+      $scope["delete"] = function(person) {
+        return person.$del('self').then(function() {
+          return $scope.people = _.reject($scope.people, person);
+        }, function(err) {
+          return $log.error("Failed to delete person");
+        });
+      };
+      $scope.edit = function(person) {
+        return ModalForm.edit({
+          model: person,
+          title: 'Edit Person'
+        });
+      };
+      return $scope.schedule = function(person) {
+        return person.$get('schedule').then(function(schedule) {
+          return ModalForm.edit({
+            model: schedule,
+            title: 'Edit Schedule'
+          });
+        });
+      };
+    };
+    link = function(scope, element, attrs) {
+      if (scope.company) {
+        return scope.getPeople();
+      } else {
+        return AdminCompanyService.query(attrs).then(function(company) {
+          scope.company = company;
+          return scope.getPeople();
+        });
+      }
+    };
+    return {
+      controller: controller,
+      link: link,
+      templateUrl: 'person_table_main.html'
+    };
+  });
+
+}).call(this);
+
+(function() {
+  angular.module('BBAdminServices').directive('resourceTable', function(AdminCompanyService, AdminResourceService, $modal, $log, ModalForm) {
+    var controller, link;
+    controller = function($scope) {
+      $scope.fields = ['id', 'name'];
+      $scope.getResources = function() {
+        var params;
+        params = {
+          company: $scope.company
+        };
+        return AdminResourceService.query(params).then(function(resources) {
+          return $scope.resources = resources;
+        });
+      };
+      $scope.newResource = function() {
+        return ModalForm["new"]({
+          company: $scope.company,
+          title: 'New Resource',
+          new_rel: 'new_resource',
+          post_rel: 'resources',
+          size: 'lg',
+          success: function(resource) {
+            return $scope.resources.push(resource);
+          }
+        });
+      };
+      $scope["delete"] = function(resource) {
+        return resource.$del('self').then(function() {
+          return $scope.resources = _.reject($scope.resources, function(p) {
+            return p.id === id;
+          });
+        }, function(err) {
+          return $log.error("Failed to delete resource");
+        });
+      };
+      return $scope.edit = function(resource) {
+        return ModalForm.edit({
+          model: resource,
+          title: 'Edit Resource'
+        });
+      };
+    };
+    link = function(scope, element, attrs) {
+      if (scope.company) {
+        return scope.getResources();
+      } else {
+        return AdminCompanyService.query(attrs).then(function(company) {
+          scope.company = company;
+          return scope.getResources();
+        });
+      }
+    };
+    return {
+      controller: controller,
+      link: link,
+      templateUrl: 'resource_table_main.html'
+    };
+  });
+
+}).call(this);
+
+(function() {
+  angular.module('BBAdminServices').directive('scheduleCalendar', function(uiCalendarConfig, ScheduleRules) {
+    var controller, link;
+    controller = function($scope, $attrs) {
+      var options;
+      $scope.calendarName = 'scheduleCal';
+      $scope.eventSources = [
+        {
+          events: function(start, end, timezone, callback) {
+            return callback($scope.getEvents());
+          }
+        }
+      ];
+      $scope.getCalendarEvents = function(start, end) {
+        var events;
+        return events = uiCalendarConfig.calendars.scheduleCal.fullCalendar('clientEvents', function(e) {
+          return (start.isAfter(e.start) || start.isSame(e.start)) && (end.isBefore(e.end) || end.isSame(e.end));
+        });
+      };
+      options = $scope.$eval($attrs.scheduleCalendar) || {};
+      $scope.options = {
+        calendar: {
+          editable: false,
+          selectable: true,
+          defaultView: 'agendaSelectAcrossWeek',
+          header: {
+            left: 'today,prev,next',
+            center: 'title',
+            right: 'month,agendaSelectAcrossWeek'
+          },
+          selectHelper: false,
+          eventOverlap: false,
+          lazyFetching: false,
+          views: {
+            agendaSelectAcrossWeek: {
+              duration: {
+                weeks: 1
+              },
+              allDaySlot: false,
+              slotEventOverlap: false,
+              minTime: options.min_time || '00:00:00',
+              maxTime: options.max_time || '24:00:00'
+            }
+          },
+          select: function(start, end, jsEvent, view) {
+            var events;
+            events = $scope.getCalendarEvents(start, end);
+            if (events.length > 0) {
+              return $scope.removeRange(start, end);
+            } else {
+              return $scope.addRange(start, end);
+            }
+          },
+          eventResizeStop: function(event, jsEvent, ui, view) {
+            return $scope.addRange(event.start, event.end);
+          },
+          eventDrop: function(event, delta, revertFunc, jsEvent, ui, view) {
+            var orig;
+            if (event.start.hasTime()) {
+              orig = {
+                start: moment(event.start).subtract(delta),
+                end: moment(event.end).subtract(delta)
+              };
+              $scope.removeRange(orig.start, orig.end);
+              return $scope.addRange(event.start, event.end);
+            }
+          },
+          eventClick: function(event, jsEvent, view) {
+            return $scope.removeRange(event.start, event.end);
+          }
+        }
+      };
+      return $scope.render = function() {
+        return uiCalendarConfig.calendars.scheduleCal.fullCalendar('render');
+      };
+    };
+    link = function(scope, element, attrs, ngModel) {
+      var scheduleRules;
+      scheduleRules = function() {
+        return new ScheduleRules(ngModel.$viewValue);
+      };
+      scope.getEvents = function() {
+        return scheduleRules().toEvents();
+      };
+      scope.addRange = function(start, end) {
+        ngModel.$setViewValue(scheduleRules().addRange(start, end));
+        return ngModel.$render();
+      };
+      scope.removeRange = function(start, end) {
+        ngModel.$setViewValue(scheduleRules().removeRange(start, end));
+        return ngModel.$render();
+      };
+      scope.toggleRange = function(start, end) {
+        ngModel.$setViewValue(scheduleRules().toggleRange(start, end));
+        return ngModel.$render();
+      };
+      return ngModel.$render = function() {
+        if (uiCalendarConfig && uiCalendarConfig.calendars.scheduleCal) {
+          uiCalendarConfig.calendars.scheduleCal.fullCalendar('refetchEvents');
+          return uiCalendarConfig.calendars.scheduleCal.fullCalendar('unselect');
+        }
+      };
+    };
+    return {
+      controller: controller,
+      link: link,
+      templateUrl: 'schedule_cal_main.html',
+      require: 'ngModel',
+      scope: {
+        render: '=?'
+      }
+    };
+  });
+
+}).call(this);
+
+(function() {
+  angular.module('BBAdminServices').directive('scheduleEdit', function() {
+    var link;
+    link = function(scope, element, attrs, ngModel) {
+      ngModel.$render = function() {
+        return scope.$$value$$ = ngModel.$viewValue;
+      };
+      return scope.$watch('$$value$$', function(value) {
+        if (value != null) {
+          return ngModel.$setViewValue(value);
+        }
+      });
+    };
+    return {
+      link: link,
+      templateUrl: 'schedule_edit_main.html',
+      require: 'ngModel'
+    };
+  });
+
+  angular.module('schemaForm').config(function(schemaFormProvider, schemaFormDecoratorsProvider, sfPathProvider) {
+    schemaFormDecoratorsProvider.addMapping('bootstrapDecorator', 'schedule', 'schedule_edit_form.html');
+    return schemaFormDecoratorsProvider.createDirective('schedule', 'schedule_edit_form.html');
+  });
+
+}).call(this);
+
+(function() {
+  angular.module('BBAdminServices').directive('scheduleTable', function(AdminCompanyService, AdminScheduleService, $modal, $log, ModalForm) {
+    var controller, link;
+    controller = function($scope) {
+      $scope.fields = ['id', 'name', 'mobile'];
+      $scope.getSchedules = function() {
+        var params;
+        params = {
+          company: $scope.company
+        };
+        return AdminScheduleService.query(params).then(function(schedules) {
+          return $scope.schedules = schedules;
+        });
+      };
+      $scope.newSchedule = function() {
+        return ModalForm["new"]({
+          company: $scope.company,
+          title: 'New Schedule',
+          new_rel: 'new_schedule',
+          post_rel: 'schedules',
+          size: 'lg',
+          success: function(schedule) {
+            return $scope.schedules.push(schedule);
+          }
+        });
+      };
+      $scope["delete"] = function(schedule) {
+        return schedule.$del('self').then(function() {
+          return $scope.schedules = _.reject($scope.schedules, schedule);
+        }, function(err) {
+          return $log.error("Failed to delete schedule");
+        });
+      };
+      return $scope.edit = function(schedule) {
+        return ModalForm.edit({
+          model: schedule,
+          title: 'Edit Schedule',
+          size: 'lg'
+        });
+      };
+    };
+    link = function(scope, element, attrs) {
+      if (scope.company) {
+        return scope.getSchedules();
+      } else {
+        return AdminCompanyService.query(attrs).then(function(company) {
+          scope.company = company;
+          return scope.getSchedules();
+        });
+      }
+    };
+    return {
+      controller: controller,
+      link: link,
+      templateUrl: 'schedule_table_main.html'
+    };
+  });
+
+}).call(this);
+
+(function() {
+  angular.module('BBAdminServices').directive('scheduleWeekdays', function(uiCalendarConfig, ScheduleRules) {
+    var controller, link;
+    controller = function($scope, $attrs) {
+      var options;
+      $scope.calendarName = 'scheduleWeekdays';
+      $scope.eventSources = [
+        {
+          events: function(start, end, timezone, callback) {
+            return callback($scope.getEvents());
+          }
+        }
+      ];
+      $scope.getCalendarEvents = function(start, end) {
+        var events;
+        return events = uiCalendarConfig.calendars.scheduleWeekdays.fullCalendar('clientEvents', function(e) {
+          return (start.isAfter(e.start) || start.isSame(e.start)) && (end.isBefore(e.end) || end.isSame(e.end));
+        });
+      };
+      options = $scope.$eval($attrs.scheduleWeekdays) || {};
+      $scope.options = {
+        calendar: {
+          editable: false,
+          selectable: true,
+          defaultView: 'agendaSelectAcrossWeek',
+          header: {
+            left: '',
+            center: 'title',
+            right: ''
+          },
+          selectHelper: false,
+          eventOverlap: false,
+          views: {
+            agendaSelectAcrossWeek: {
+              duration: {
+                weeks: 1
+              },
+              titleFormat: '[]',
+              allDaySlot: false,
+              columnFormat: 'ddd',
+              slotEventOverlap: false,
+              minTime: options.min_time || '00:00:00',
+              maxTime: options.max_time || '24:00:00'
+            }
+          },
+          select: function(start, end, jsEvent, view) {
+            var events;
+            events = $scope.getCalendarEvents(start, end);
+            if (events.length > 0) {
+              return $scope.removeRange(start, end);
+            } else {
+              return $scope.addRange(start, end);
+            }
+          },
+          eventResizeStop: function(event, jsEvent, ui, view) {
+            return $scope.addRange(event.start, event.end);
+          },
+          eventDrop: function(event, delta, revertFunc, jsEvent, ui, view) {
+            var orig;
+            if (event.start.hasTime()) {
+              orig = {
+                start: moment(event.start).subtract(delta),
+                end: moment(event.end).subtract(delta)
+              };
+              $scope.removeRange(orig.start, orig.end);
+              return $scope.addRange(event.start, event.end);
+            }
+          },
+          eventClick: function(event, jsEvent, view) {
+            return $scope.removeRange(event.start, event.end);
+          }
+        }
+      };
+      return $scope.render = function() {
+        return uiCalendarConfig.calendars.scheduleWeekdays.fullCalendar('render');
+      };
+    };
+    link = function(scope, element, attrs, ngModel) {
+      var scheduleRules;
+      scheduleRules = function() {
+        return new ScheduleRules(ngModel.$viewValue);
+      };
+      scope.getEvents = function() {
+        return scheduleRules().toWeekdayEvents();
+      };
+      scope.addRange = function(start, end) {
+        ngModel.$setViewValue(scheduleRules().addWeekdayRange(start, end));
+        return ngModel.$render();
+      };
+      scope.removeRange = function(start, end) {
+        ngModel.$setViewValue(scheduleRules().removeWeekdayRange(start, end));
+        return ngModel.$render();
+      };
+      return ngModel.$render = function() {
+        if (uiCalendarConfig && uiCalendarConfig.calendars.scheduleWeekdays) {
+          uiCalendarConfig.calendars.scheduleWeekdays.fullCalendar('refetchEvents');
+          return uiCalendarConfig.calendars.scheduleWeekdays.fullCalendar('unselect');
+        }
+      };
+    };
+    return {
+      controller: controller,
+      link: link,
+      templateUrl: 'schedule_cal_main.html',
+      require: 'ngModel',
+      scope: {
+        render: '=?'
+      }
+    };
+  });
+
+}).call(this);
+
+(function() {
+  angular.module('BBAdminServices').directive('serviceTable', function(AdminCompanyService, AdminServiceService, $modal, $log, ModalForm) {
+    var controller, link;
+    controller = function($scope) {
+      $scope.fields = ['id', 'name'];
+      $scope.getServices = function() {
+        var params;
+        params = {
+          company: $scope.company
+        };
+        return AdminServiceService.query(params).then(function(services) {
+          return $scope.services = services;
+        });
+      };
+      $scope.newService = function() {
+        return ModalForm["new"]({
+          company: $scope.company,
+          title: 'New Service',
+          new_rel: 'new_service',
+          post_rel: 'services',
+          success: function(service) {
+            return $scope.services.push(service);
+          }
+        });
+      };
+      $scope["delete"] = function(service) {
+        return service.$del('self').then(function() {
+          return $scope.services = _.reject($scope.services, service);
+        }, function(err) {
+          return $log.error("Failed to delete service");
+        });
+      };
+      return $scope.edit = function(service) {
+        return ModalForm.edit({
+          model: service,
+          title: 'Edit Service'
+        });
+      };
+    };
+    link = function(scope, element, attrs) {
+      if (scope.company) {
+        return scope.getServices();
+      } else {
+        return AdminCompanyService.query(attrs).then(function(company) {
+          scope.company = company;
+          return scope.getServices();
+        });
+      }
+    };
+    return {
+      controller: controller,
+      link: link,
+      templateUrl: 'service_table_main.html'
+    };
+  });
+
+}).call(this);
+
+(function() {
   'use strict';
   var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
@@ -1225,507 +1726,6 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
         })(this));
         return deferred.promise;
       }
-    };
-  });
-
-}).call(this);
-
-(function() {
-  angular.module('BBAdminServices').directive('personTable', function(AdminCompanyService, AdminPersonService, $log, ModalForm) {
-    var controller, link;
-    controller = function($scope) {
-      $scope.fields = ['id', 'name', 'mobile'];
-      $scope.getPeople = function() {
-        var params;
-        params = {
-          company: $scope.company
-        };
-        return AdminPersonService.query(params).then(function(people) {
-          return $scope.people = people;
-        });
-      };
-      $scope.newPerson = function() {
-        return ModalForm["new"]({
-          company: $scope.company,
-          title: 'New Person',
-          new_rel: 'new_person',
-          post_rel: 'people',
-          success: function(person) {
-            return $scope.people.push(person);
-          }
-        });
-      };
-      $scope["delete"] = function(person) {
-        return person.$del('self').then(function() {
-          return $scope.people = _.reject($scope.people, person);
-        }, function(err) {
-          return $log.error("Failed to delete person");
-        });
-      };
-      $scope.edit = function(person) {
-        return ModalForm.edit({
-          model: person,
-          title: 'Edit Person'
-        });
-      };
-      return $scope.schedule = function(person) {
-        return person.$get('schedule').then(function(schedule) {
-          return ModalForm.edit({
-            model: schedule,
-            title: 'Edit Schedule'
-          });
-        });
-      };
-    };
-    link = function(scope, element, attrs) {
-      if (scope.company) {
-        return scope.getPeople();
-      } else {
-        return AdminCompanyService.query(attrs).then(function(company) {
-          scope.company = company;
-          return scope.getPeople();
-        });
-      }
-    };
-    return {
-      controller: controller,
-      link: link,
-      templateUrl: 'person_table_main.html'
-    };
-  });
-
-}).call(this);
-
-(function() {
-  angular.module('BBAdminServices').directive('resourceTable', function(AdminCompanyService, AdminResourceService, $modal, $log, ModalForm) {
-    var controller, link;
-    controller = function($scope) {
-      $scope.fields = ['id', 'name'];
-      $scope.getResources = function() {
-        var params;
-        params = {
-          company: $scope.company
-        };
-        return AdminResourceService.query(params).then(function(resources) {
-          return $scope.resources = resources;
-        });
-      };
-      $scope.newResource = function() {
-        return ModalForm["new"]({
-          company: $scope.company,
-          title: 'New Resource',
-          new_rel: 'new_resource',
-          post_rel: 'resources',
-          size: 'lg',
-          success: function(resource) {
-            return $scope.resources.push(resource);
-          }
-        });
-      };
-      $scope["delete"] = function(resource) {
-        return resource.$del('self').then(function() {
-          return $scope.resources = _.reject($scope.resources, function(p) {
-            return p.id === id;
-          });
-        }, function(err) {
-          return $log.error("Failed to delete resource");
-        });
-      };
-      return $scope.edit = function(resource) {
-        return ModalForm.edit({
-          model: resource,
-          title: 'Edit Resource'
-        });
-      };
-    };
-    link = function(scope, element, attrs) {
-      if (scope.company) {
-        return scope.getResources();
-      } else {
-        return AdminCompanyService.query(attrs).then(function(company) {
-          scope.company = company;
-          return scope.getResources();
-        });
-      }
-    };
-    return {
-      controller: controller,
-      link: link,
-      templateUrl: 'resource_table_main.html'
-    };
-  });
-
-}).call(this);
-
-(function() {
-  angular.module('BBAdminServices').directive('scheduleCalendar', function(uiCalendarConfig, ScheduleRules) {
-    var controller, link;
-    controller = function($scope, $attrs) {
-      var options;
-      $scope.calendarName = 'scheduleCal';
-      $scope.eventSources = [
-        {
-          events: function(start, end, timezone, callback) {
-            return callback($scope.getEvents());
-          }
-        }
-      ];
-      $scope.getCalendarEvents = function(start, end) {
-        var events;
-        return events = uiCalendarConfig.calendars.scheduleCal.fullCalendar('clientEvents', function(e) {
-          return (start.isAfter(e.start) || start.isSame(e.start)) && (end.isBefore(e.end) || end.isSame(e.end));
-        });
-      };
-      options = $scope.$eval($attrs.scheduleCalendar) || {};
-      $scope.options = {
-        calendar: {
-          editable: false,
-          selectable: true,
-          defaultView: 'agendaSelectAcrossWeek',
-          header: {
-            left: 'today,prev,next',
-            center: 'title',
-            right: 'month,agendaSelectAcrossWeek'
-          },
-          selectHelper: false,
-          eventOverlap: false,
-          lazyFetching: false,
-          views: {
-            agendaSelectAcrossWeek: {
-              duration: {
-                weeks: 1
-              },
-              allDaySlot: false,
-              slotEventOverlap: false,
-              minTime: options.min_time || '00:00:00',
-              maxTime: options.max_time || '24:00:00'
-            }
-          },
-          select: function(start, end, jsEvent, view) {
-            var events;
-            events = $scope.getCalendarEvents(start, end);
-            if (events.length > 0) {
-              return $scope.removeRange(start, end);
-            } else {
-              return $scope.addRange(start, end);
-            }
-          },
-          eventResizeStop: function(event, jsEvent, ui, view) {
-            return $scope.addRange(event.start, event.end);
-          },
-          eventDrop: function(event, delta, revertFunc, jsEvent, ui, view) {
-            var orig;
-            if (event.start.hasTime()) {
-              orig = {
-                start: moment(event.start).subtract(delta),
-                end: moment(event.end).subtract(delta)
-              };
-              $scope.removeRange(orig.start, orig.end);
-              return $scope.addRange(event.start, event.end);
-            }
-          },
-          eventClick: function(event, jsEvent, view) {
-            return $scope.removeRange(event.start, event.end);
-          }
-        }
-      };
-      return $scope.render = function() {
-        return uiCalendarConfig.calendars.scheduleCal.fullCalendar('render');
-      };
-    };
-    link = function(scope, element, attrs, ngModel) {
-      var scheduleRules;
-      scheduleRules = function() {
-        return new ScheduleRules(ngModel.$viewValue);
-      };
-      scope.getEvents = function() {
-        return scheduleRules().toEvents();
-      };
-      scope.addRange = function(start, end) {
-        ngModel.$setViewValue(scheduleRules().addRange(start, end));
-        return ngModel.$render();
-      };
-      scope.removeRange = function(start, end) {
-        ngModel.$setViewValue(scheduleRules().removeRange(start, end));
-        return ngModel.$render();
-      };
-      scope.toggleRange = function(start, end) {
-        ngModel.$setViewValue(scheduleRules().toggleRange(start, end));
-        return ngModel.$render();
-      };
-      return ngModel.$render = function() {
-        if (uiCalendarConfig && uiCalendarConfig.calendars.scheduleCal) {
-          uiCalendarConfig.calendars.scheduleCal.fullCalendar('refetchEvents');
-          return uiCalendarConfig.calendars.scheduleCal.fullCalendar('unselect');
-        }
-      };
-    };
-    return {
-      controller: controller,
-      link: link,
-      templateUrl: 'schedule_cal_main.html',
-      require: 'ngModel',
-      scope: {
-        render: '=?'
-      }
-    };
-  });
-
-}).call(this);
-
-(function() {
-  angular.module('BBAdminServices').directive('scheduleEdit', function() {
-    var link;
-    link = function(scope, element, attrs, ngModel) {
-      ngModel.$render = function() {
-        return scope.$$value$$ = ngModel.$viewValue;
-      };
-      return scope.$watch('$$value$$', function(value) {
-        if (value != null) {
-          return ngModel.$setViewValue(value);
-        }
-      });
-    };
-    return {
-      link: link,
-      templateUrl: 'schedule_edit_main.html',
-      require: 'ngModel'
-    };
-  });
-
-  angular.module('schemaForm').config(function(schemaFormProvider, schemaFormDecoratorsProvider, sfPathProvider) {
-    schemaFormDecoratorsProvider.addMapping('bootstrapDecorator', 'schedule', 'schedule_edit_form.html');
-    return schemaFormDecoratorsProvider.createDirective('schedule', 'schedule_edit_form.html');
-  });
-
-}).call(this);
-
-(function() {
-  angular.module('BBAdminServices').directive('scheduleTable', function(AdminCompanyService, AdminScheduleService, $modal, $log, ModalForm) {
-    var controller, link;
-    controller = function($scope) {
-      $scope.fields = ['id', 'name', 'mobile'];
-      $scope.getSchedules = function() {
-        var params;
-        params = {
-          company: $scope.company
-        };
-        return AdminScheduleService.query(params).then(function(schedules) {
-          return $scope.schedules = schedules;
-        });
-      };
-      $scope.newSchedule = function() {
-        return ModalForm["new"]({
-          company: $scope.company,
-          title: 'New Schedule',
-          new_rel: 'new_schedule',
-          post_rel: 'schedules',
-          size: 'lg',
-          success: function(schedule) {
-            return $scope.schedules.push(schedule);
-          }
-        });
-      };
-      $scope["delete"] = function(schedule) {
-        return schedule.$del('self').then(function() {
-          return $scope.schedules = _.reject($scope.schedules, schedule);
-        }, function(err) {
-          return $log.error("Failed to delete schedule");
-        });
-      };
-      return $scope.edit = function(schedule) {
-        return ModalForm.edit({
-          model: schedule,
-          title: 'Edit Schedule',
-          size: 'lg'
-        });
-      };
-    };
-    link = function(scope, element, attrs) {
-      if (scope.company) {
-        return scope.getSchedules();
-      } else {
-        return AdminCompanyService.query(attrs).then(function(company) {
-          scope.company = company;
-          return scope.getSchedules();
-        });
-      }
-    };
-    return {
-      controller: controller,
-      link: link,
-      templateUrl: 'schedule_table_main.html'
-    };
-  });
-
-}).call(this);
-
-(function() {
-  angular.module('BBAdminServices').directive('scheduleWeekdays', function(uiCalendarConfig, ScheduleRules) {
-    var controller, link;
-    controller = function($scope, $attrs) {
-      var options;
-      $scope.calendarName = 'scheduleWeekdays';
-      $scope.eventSources = [
-        {
-          events: function(start, end, timezone, callback) {
-            return callback($scope.getEvents());
-          }
-        }
-      ];
-      $scope.getCalendarEvents = function(start, end) {
-        var events;
-        return events = uiCalendarConfig.calendars.scheduleWeekdays.fullCalendar('clientEvents', function(e) {
-          return (start.isAfter(e.start) || start.isSame(e.start)) && (end.isBefore(e.end) || end.isSame(e.end));
-        });
-      };
-      options = $scope.$eval($attrs.scheduleWeekdays) || {};
-      $scope.options = {
-        calendar: {
-          editable: false,
-          selectable: true,
-          defaultView: 'agendaSelectAcrossWeek',
-          header: {
-            left: '',
-            center: 'title',
-            right: ''
-          },
-          selectHelper: false,
-          eventOverlap: false,
-          views: {
-            agendaSelectAcrossWeek: {
-              duration: {
-                weeks: 1
-              },
-              titleFormat: '[]',
-              allDaySlot: false,
-              columnFormat: 'ddd',
-              slotEventOverlap: false,
-              minTime: options.min_time || '00:00:00',
-              maxTime: options.max_time || '24:00:00'
-            }
-          },
-          select: function(start, end, jsEvent, view) {
-            var events;
-            events = $scope.getCalendarEvents(start, end);
-            if (events.length > 0) {
-              return $scope.removeRange(start, end);
-            } else {
-              return $scope.addRange(start, end);
-            }
-          },
-          eventResizeStop: function(event, jsEvent, ui, view) {
-            return $scope.addRange(event.start, event.end);
-          },
-          eventDrop: function(event, delta, revertFunc, jsEvent, ui, view) {
-            var orig;
-            if (event.start.hasTime()) {
-              orig = {
-                start: moment(event.start).subtract(delta),
-                end: moment(event.end).subtract(delta)
-              };
-              $scope.removeRange(orig.start, orig.end);
-              return $scope.addRange(event.start, event.end);
-            }
-          },
-          eventClick: function(event, jsEvent, view) {
-            return $scope.removeRange(event.start, event.end);
-          }
-        }
-      };
-      return $scope.render = function() {
-        return uiCalendarConfig.calendars.scheduleWeekdays.fullCalendar('render');
-      };
-    };
-    link = function(scope, element, attrs, ngModel) {
-      var scheduleRules;
-      scheduleRules = function() {
-        return new ScheduleRules(ngModel.$viewValue);
-      };
-      scope.getEvents = function() {
-        return scheduleRules().toWeekdayEvents();
-      };
-      scope.addRange = function(start, end) {
-        ngModel.$setViewValue(scheduleRules().addWeekdayRange(start, end));
-        return ngModel.$render();
-      };
-      scope.removeRange = function(start, end) {
-        ngModel.$setViewValue(scheduleRules().removeWeekdayRange(start, end));
-        return ngModel.$render();
-      };
-      return ngModel.$render = function() {
-        if (uiCalendarConfig && uiCalendarConfig.calendars.scheduleWeekdays) {
-          uiCalendarConfig.calendars.scheduleWeekdays.fullCalendar('refetchEvents');
-          return uiCalendarConfig.calendars.scheduleWeekdays.fullCalendar('unselect');
-        }
-      };
-    };
-    return {
-      controller: controller,
-      link: link,
-      templateUrl: 'schedule_cal_main.html',
-      require: 'ngModel',
-      scope: {
-        render: '=?'
-      }
-    };
-  });
-
-}).call(this);
-
-(function() {
-  angular.module('BBAdminServices').directive('serviceTable', function(AdminCompanyService, AdminServiceService, $modal, $log, ModalForm) {
-    var controller, link;
-    controller = function($scope) {
-      $scope.fields = ['id', 'name'];
-      $scope.getServices = function() {
-        var params;
-        params = {
-          company: $scope.company
-        };
-        return AdminServiceService.query(params).then(function(services) {
-          return $scope.services = services;
-        });
-      };
-      $scope.newService = function() {
-        return ModalForm["new"]({
-          company: $scope.company,
-          title: 'New Service',
-          new_rel: 'new_service',
-          post_rel: 'services',
-          success: function(service) {
-            return $scope.services.push(service);
-          }
-        });
-      };
-      $scope["delete"] = function(service) {
-        return service.$del('self').then(function() {
-          return $scope.services = _.reject($scope.services, service);
-        }, function(err) {
-          return $log.error("Failed to delete service");
-        });
-      };
-      return $scope.edit = function(service) {
-        return ModalForm.edit({
-          model: service,
-          title: 'Edit Service'
-        });
-      };
-    };
-    link = function(scope, element, attrs) {
-      if (scope.company) {
-        return scope.getServices();
-      } else {
-        return AdminCompanyService.query(attrs).then(function(company) {
-          scope.company = company;
-          return scope.getServices();
-        });
-      }
-    };
-    return {
-      controller: controller,
-      link: link,
-      templateUrl: 'service_table_main.html'
     };
   });
 
