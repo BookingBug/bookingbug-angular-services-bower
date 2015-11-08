@@ -37,10 +37,10 @@ $.fullCalendar.Grid.prototype.setElement = function(el) {
 
 var FC = $.fullCalendar;
 var agendaSelectAcrossWeek
-agendaSelectAcrossWeek = FC.views.agenda.class.extend({
+agendaSelectAcrossWeek = FC.views.agenda['class'].extend({
 
   initialize: function() {
-    FC.views.agenda.class.prototype.initialize.apply(this);
+    FC.views.agenda['class'].prototype.initialize.apply(this);
     this.timeGrid.renderSelection = this.renderSelection;
   },
 
@@ -59,7 +59,7 @@ agendaSelectAcrossWeek = FC.views.agenda.class.extend({
 
   reportSelection: function(range, ev) {
     _.each(this.splitRange(range), function(r) {
-      FC.views.agenda.class.prototype.reportSelection.apply(this, [r, ev])
+      FC.views.agenda['class'].prototype.reportSelection.apply(this, [r, ev])
     }, this);
   },
 
@@ -98,15 +98,15 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
     };
 
     Clinic.prototype.matchesParams = function(item) {
-      if (this.params.start_date) {
-        this.start_date || (this.start_date = moment(this.params.start_date));
-        if (this.start_date.isAfter(item.date)) {
+      if (this.params.start_time) {
+        this.start_time || (this.start_time = moment(this.params.start_time));
+        if (this.start_time.isAfter(item.start_time)) {
           return false;
         }
       }
-      if (this.params.end_date) {
-        this.end_date || (this.end_date = moment(this.params.end_date));
-        if (this.end_date.isBefore(item.date)) {
+      if (this.params.end_time) {
+        this.end_time || (this.end_time = moment(this.params.end_time));
+        if (this.end_time.isBefore(item.end_time)) {
           return false;
         }
       }
@@ -661,50 +661,58 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
   var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
-  angular.module('BB.Models').factory("Admin.ClinicModel", function($q, BBModel, BaseModel) {
+  angular.module('BB.Models').factory("Admin.ClinicModel", function($q, BBModel, BaseModel, ClinicModel) {
     var Admin_Clinic;
     return Admin_Clinic = (function(superClass) {
       extend(Admin_Clinic, superClass);
 
       function Admin_Clinic(data) {
+        var base;
         Admin_Clinic.__super__.constructor.call(this, data);
-        this.setTimes();
-        this.setResourcesAndPeople();
+        this.repeat_rule || (this.repeat_rule = {});
+        (base = this.repeat_rule).rules || (base.rules = {});
       }
 
-      Admin_Clinic.prototype.setResourcesAndPeople = function() {
-        this.resources = _.reduce(this.resource_ids, function(h, id) {
-          h[id] = true;
-          return h;
-        }, {});
-        this.people = _.reduce(this.person_ids, function(h, id) {
-          h[id] = true;
-          return h;
-        }, {});
-        this.uncovered = !this.person_ids || this.person_ids.length === 0;
-        if (this.uncovered) {
-          return this.className = "clinic_uncovered";
-        } else {
-          return this.className = "clinic_covered";
+      Admin_Clinic.prototype.calcRepeatRule = function() {
+        var en, id, ref, ref1, ref2, vals;
+        vals = {};
+        vals.name = this.name;
+        vals.start_time = this.start_time.format("HH:mm");
+        vals.end_time = this.end_time.format("HH:mm");
+        vals.address_id = this.address_id;
+        vals.resource_ids = [];
+        ref = this.resources;
+        for (id in ref) {
+          en = ref[id];
+          if (en) {
+            vals.resource_ids.push(id);
+          }
         }
-      };
-
-      Admin_Clinic.prototype.setTimes = function() {
-        if (this.start_time) {
-          this.start_time = moment(this.start_time);
-          this.start = this.start_time;
+        vals.person_ids = [];
+        ref1 = this.people;
+        for (id in ref1) {
+          en = ref1[id];
+          if (en) {
+            vals.person_ids.push(id);
+          }
         }
-        if (this.end_time) {
-          this.end_time = moment(this.end_time);
-          this.end = this.end_time;
+        vals.service_ids = [];
+        ref2 = this.services;
+        for (id in ref2) {
+          en = ref2[id];
+          if (en) {
+            vals.service_ids.push(id);
+          }
         }
-        return this.title = this.name;
+        this.repeat_rule.properties = vals;
+        return this.repeat_rule;
       };
 
       Admin_Clinic.prototype.getPostData = function() {
-        var data, en, id, ref, ref1;
+        var data, en, id, ref, ref1, ref2;
         data = {};
         data.name = this.name;
+        data.repeat_rule = this.repeat_rule;
         data.start_time = this.start_time;
         data.end_time = this.end_time;
         data.resource_ids = [];
@@ -723,9 +731,22 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
             data.person_ids.push(id);
           }
         }
-        console.log(this.address);
+        data.service_ids = [];
+        ref2 = this.services;
+        for (id in ref2) {
+          en = ref2[id];
+          if (en) {
+            data.service_ids.push(id);
+          }
+        }
         if (this.address) {
           data.address_id = this.address.id;
+        }
+        if (this.settings) {
+          data.settings = this.settings;
+        }
+        if (this.repeat_rule && this.repeat_rule.rules && this.repeat_rule.rules.frequency) {
+          data.repeat_rule = this.calcRepeatRule();
         }
         return data;
       };
@@ -736,9 +757,14 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
             return person_id;
           }
         }));
-        this.resource_ids = _.compact(_.map(this.resources, function(present, person_id) {
+        this.resource_ids = _.compact(_.map(this.resources, function(present, resource_id) {
           if (present) {
-            return person_id;
+            return resource_id;
+          }
+        }));
+        this.service_ids = _.compact(_.map(this.services, function(present, service_id) {
+          if (present) {
+            return service_id;
           }
         }));
         return this.$put('self', {}, this).then((function(_this) {
@@ -752,7 +778,7 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
 
       return Admin_Clinic;
 
-    })(BaseModel);
+    })(ClinicModel);
   });
 
 }).call(this);
@@ -839,7 +865,7 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
         str = start.format("YYYY-MM-DD") + "-" + end.format("YYYY-MM-DD");
         this.availability || (this.availability = {});
         if (this.availability[str]) {
-          return this.availability[str];
+          return this.availability[str] === "Yes";
         }
         this.availability[str] = "-";
         if (this.$has('schedule')) {
@@ -857,7 +883,7 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
         } else {
           this.availability[str] = "Yes";
         }
-        return this.availability[str];
+        return this.availability[str] === "Yes";
       };
 
       Admin_Person.prototype.startServing = function(queuer) {
@@ -922,6 +948,25 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
         return defer.promise;
       };
 
+      Admin_Person.prototype.getPostData = function() {
+        var data;
+        data = {};
+        data.id = this.id;
+        data.name = this.name;
+        data.extra = this.extra;
+        data.description = this.description;
+        return data;
+      };
+
+      Admin_Person.prototype.$update = function(data) {
+        data || (data = this.getPostData());
+        return this.$put('self', {}, data).then((function(_this) {
+          return function(res) {
+            return _this.constructor(res);
+          };
+        })(this));
+      };
+
       return Admin_Person;
 
     })(PersonModel);
@@ -948,7 +993,7 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
         str = start.format("YYYY-MM-DD") + "-" + end.format("YYYY-MM-DD");
         this.availability || (this.availability = {});
         if (this.availability[str]) {
-          return this.availability[str];
+          return this.availability[str] === "Yes";
         }
         this.availability[str] = "-";
         if (this.$has('schedule')) {
@@ -966,7 +1011,7 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
         } else {
           this.availability[str] = "Yes";
         }
-        return this.availability[str];
+        return this.availability[str] === "Yes";
       };
 
       return Admin_Resource;
@@ -1257,31 +1302,40 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
         var company, defer, existing;
         company = params.company;
         defer = $q.defer();
-        existing = ClinicCollections.find(params);
-        if (existing) {
-          defer.resolve(existing);
-        } else {
-          company.$get('clinics').then(function(collection) {
-            return collection.$get('clinics').then(function(clinics) {
-              var models, s;
-              models = (function() {
-                var i, len, results;
-                results = [];
-                for (i = 0, len = clinics.length; i < len; i++) {
-                  s = clinics[i];
-                  results.push(new BBModel.Admin.Clinic(s));
-                }
-                return results;
-              })();
-              clinics = new $window.Collection.Clinic(collection, models, params);
-              ClinicCollections.add(clinics);
-              return defer.resolve(clinics);
-            }, function(err) {
-              return defer.reject(err);
-            });
+        if (params.id) {
+          company.$get('clinics', params).then(function(clinic) {
+            clinic = new BBModel.Admin.Clinic(clinic);
+            return defer.resolve(clinic);
           }, function(err) {
             return defer.reject(err);
           });
+        } else {
+          existing = ClinicCollections.find(params);
+          if (existing) {
+            defer.resolve(existing);
+          } else {
+            company.$get('clinics', params).then(function(collection) {
+              return collection.$get('clinics').then(function(clinics) {
+                var models, s;
+                models = (function() {
+                  var i, len, results;
+                  results = [];
+                  for (i = 0, len = clinics.length; i < len; i++) {
+                    s = clinics[i];
+                    results.push(new BBModel.Admin.Clinic(s));
+                  }
+                  return results;
+                })();
+                clinics = new $window.Collection.Clinic(collection, models, params);
+                ClinicCollections.add(clinics);
+                return defer.resolve(clinics);
+              }, function(err) {
+                return defer.reject(err);
+              });
+            }, function(err) {
+              return defer.reject(err);
+            });
+          }
         }
         return defer.promise;
       },
@@ -1565,10 +1619,112 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
 }).call(this);
 
 (function() {
-  angular.module('BB.Services').factory("BB.Service.schedule", function($q, BBModel) {
+  angular.module('BBAdminServices').factory("BB.Service.schedule", function($q, BBModel) {
     return {
       unwrap: function(resource) {
         return new BBModel.Admin.Schedule(resource);
+      }
+    };
+  });
+
+  angular.module('BBAdminServices').factory("BB.Service.person", function($q, BBModel) {
+    return {
+      unwrap: function(resource) {
+        return new BBModel.Admin.Person(resource);
+      }
+    };
+  });
+
+  angular.module('BBAdminServices').factory("BB.Service.people", function($q, BBModel) {
+    return {
+      promise: true,
+      unwrap: function(resource) {
+        var deferred;
+        deferred = $q.defer();
+        resource.$get('people').then((function(_this) {
+          return function(items) {
+            var i, j, len, models;
+            models = [];
+            for (j = 0, len = items.length; j < len; j++) {
+              i = items[j];
+              models.push(new BBModel.Admin.Person(i));
+            }
+            return deferred.resolve(models);
+          };
+        })(this), (function(_this) {
+          return function(err) {
+            return deferred.reject(err);
+          };
+        })(this));
+        return deferred.promise;
+      }
+    };
+  });
+
+  angular.module('BBAdminServices').factory("BB.Service.resource", function($q, BBModel) {
+    return {
+      unwrap: function(resource) {
+        return new BBModel.Admin.Resource(resource);
+      }
+    };
+  });
+
+  angular.module('BBAdminServices').factory("BB.Service.resources", function($q, BBModel) {
+    return {
+      promise: true,
+      unwrap: function(resource) {
+        var deferred;
+        deferred = $q.defer();
+        resource.$get('resources').then((function(_this) {
+          return function(items) {
+            var i, j, len, models;
+            models = [];
+            for (j = 0, len = items.length; j < len; j++) {
+              i = items[j];
+              models.push(new BBModel.Admin.Resource(i));
+            }
+            return deferred.resolve(models);
+          };
+        })(this), (function(_this) {
+          return function(err) {
+            return deferred.reject(err);
+          };
+        })(this));
+        return deferred.promise;
+      }
+    };
+  });
+
+  angular.module('BBAdminServices').factory("BB.Service.service", function($q, BBModel) {
+    return {
+      unwrap: function(resource) {
+        return new BBModel.Admin.Service(resource);
+      }
+    };
+  });
+
+  angular.module('BBAdminServices').factory("BB.Service.services", function($q, BBModel) {
+    return {
+      promise: true,
+      unwrap: function(resource) {
+        var deferred;
+        deferred = $q.defer();
+        resource.$get('services').then((function(_this) {
+          return function(items) {
+            var i, j, len, models;
+            models = [];
+            for (j = 0, len = items.length; j < len; j++) {
+              i = items[j];
+              models.push(new BBModel.Admin.Service(i));
+            }
+            return deferred.resolve(models);
+          };
+        })(this), (function(_this) {
+          return function(err) {
+            return deferred.reject(err);
+          };
+        })(this));
+        return deferred.promise;
       }
     };
   });
