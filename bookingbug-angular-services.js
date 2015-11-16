@@ -626,10 +626,38 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
 
 (function() {
   'use strict';
+
+  /***
+  * @ngdoc service
+  * @name BB.Models:AdminAddress
+  *
+  * @description
+  * Representation of an Address Object
+  *
+  * @property {string} address1 First line of the address 
+  * @property {string} address2 Second line of the address 
+  * @property {string} address3 Third line of the address 
+  * @property {string} address4 Fourth line of the address 
+  * @property {string} address5 Fifth line of the address 
+  * @property {string} postcode The Postcode/Zipcode
+  * @property {string} country The country
+   */
   var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
   angular.module('BB.Models').factory("Admin.AddressModel", function($q, BBModel, BaseModel, AddressModel) {
+
+    /***
+    * @ngdoc method
+    * @name distanceFrom
+    * @methodOf BB.Models:AdminAddress
+    * @param {string=} address The admin address
+    * @param {array} options The options of admin address
+    * @description
+    * Calculate the address distance in according of the address and options parameters
+    *
+    * @returns {array} Returns an array of address
+     */
     var Admin_Address;
     return Admin_Address = (function(superClass) {
       extend(Admin_Address, superClass);
@@ -654,6 +682,28 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
 
 (function() {
   'use strict';
+
+  /***
+  * @ngdoc service
+  * @name BB.Models:AdminClinic
+  *
+  * @description
+  * Representation of an Clinic Object
+  *
+  * @property {string} setTimes Set times for the clinic
+  * @property {string} setResourcesAndPeople Set resources and people for the clinic 
+  * @property {object} settings Clinic settings
+  * @property {string} resources Clinic resources
+  * @property {integer} resource_ids Clinic resources ids
+  * @property {string} people Clinic people
+  * @property {integer} person_ids Clinic Person ids
+  * @property {string} services Clinic services
+  * @property {integer} services_ids Clinic service ids
+  * @property {string} uncovered The uncovered
+  * @property {string} className The class Name
+  * @property {string} start_time The clinic start thime
+  * @property {string} end_time The clinic end time
+   */
   var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
@@ -668,6 +718,17 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
         this.repeat_rule || (this.repeat_rule = {});
         (base = this.repeat_rule).rules || (base.rules = {});
       }
+
+
+      /***
+      * @ngdoc method
+      * @name calcRepeatRule
+      * @methodOf BB.Models:AdminClinic
+      * @description
+      * Calculate the repeat rule
+      *
+      * @returns {array} Returns an array of repeat rules
+       */
 
       Admin_Clinic.prototype.calcRepeatRule = function() {
         var en, id, ref, ref1, ref2, vals;
@@ -703,6 +764,17 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
         this.repeat_rule.properties = vals;
         return this.repeat_rule;
       };
+
+
+      /***
+      * @ngdoc method
+      * @name getPostData
+      * @methodOf BB.Models:AdminClinic
+      * @description
+      * Get post data
+      *
+      * @returns {array} Returns an array with data
+       */
 
       Admin_Clinic.prototype.getPostData = function() {
         var data, en, id, ref, ref1, ref2;
@@ -746,6 +818,17 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
         }
         return data;
       };
+
+
+      /***
+      * @ngdoc method
+      * @name save
+      * @methodOf BB.Models:AdminClinic
+      * @description
+      * Save person id, resource id and service id
+      *
+      * @returns {array} Returns an array with resources and peoples
+       */
 
       Admin_Clinic.prototype.save = function() {
         this.person_ids = _.compact(_.map(this.people, function(present, person_id) {
@@ -810,6 +893,17 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
         }
       }
 
+
+      /***
+      * @ngdoc method
+      * @name setCurrentCustomer
+      * @methodOf BB.Models:AdminPerson
+      * @description
+      * Set current customer
+      *
+      * @returns {Promise} Returns a promise that rezolve the current customer
+       */
+
       Admin_Person.prototype.setCurrentCustomer = function() {
         var defer;
         defer = $q.defer();
@@ -828,6 +922,18 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
         return defer.promise;
       };
 
+
+      /***
+      * @ngdoc method
+      * @name setAttendance
+      * @methodOf BB.Models:AdminPerson
+      * @param {string} status The status of attendance
+      * @description
+      * Set attendance in according of the status parameter
+      *
+      * @returns {Promise} Returns a promise that rezolve the attendance
+       */
+
       Admin_Person.prototype.setAttendance = function(status) {
         var defer;
         defer = $q.defer();
@@ -845,6 +951,17 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
         })(this));
         return defer.promise;
       };
+
+
+      /***
+      * @ngdoc method
+      * @name finishServing
+      * @methodOf BB.Models:AdminPerson
+      * @description
+      * Finish serving
+      *
+      * @returns {Promise} Returns a promise that rezolve the finish serving
+       */
 
       Admin_Person.prototype.finishServing = function() {
         var defer;
@@ -869,6 +986,19 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
         }
         return defer.promise;
       };
+
+
+      /***
+      * @ngdoc method
+      * @name isAvailable
+      * @methodOf BB.Models:AdminPerson
+      * @param {date=} start The start date format of the availability schedule
+      * @param {date=} end The end date format of the availability schedule
+      * @description
+      * Look up a schedule for a time range to see if this available.
+      *
+      * @returns {string} Returns yes if schedule is available or not.
+       */
 
       Admin_Person.prototype.isAvailable = function(start, end) {
         var str;
@@ -896,6 +1026,18 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
         return this.availability[str] === "Yes";
       };
 
+
+      /***
+      * @ngdoc method
+      * @name startServing
+      * @methodOf BB.Models:AdminPerson
+      * @param {string=} queuer The queuer of the company.
+      * @description
+      * Start serving in according of the queuer parameter
+      *
+      * @returns {Promise} Returns a promise that rezolve the start serving link
+       */
+
       Admin_Person.prototype.startServing = function(queuer) {
         var defer, params;
         defer = $q.defer();
@@ -922,6 +1064,17 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
         }
         return defer.promise;
       };
+
+
+      /***
+      * @ngdoc method
+      * @name getQueuers
+      * @methodOf BB.Models:AdminPerson
+      * @description
+      * Get the queuers
+      *
+      * @returns {Promise} Returns a promise that rezolve the queuer links
+       */
 
       Admin_Person.prototype.getQueuers = function() {
         var defer;
@@ -958,6 +1111,17 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
         return defer.promise;
       };
 
+
+      /***
+      * @ngdoc method
+      * @name getPostData
+      * @methodOf BB.Models:AdminPerson
+      * @description
+      * Get post data
+      *
+      * @returns {array} Returns data
+       */
+
       Admin_Person.prototype.getPostData = function() {
         var data;
         data = {};
@@ -967,6 +1131,18 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
         data.description = this.description;
         return data;
       };
+
+
+      /***
+      * @ngdoc method
+      * @name update
+      * @methodOf BB.Models:AdminPerson
+      * @param {object} data The company data
+      * @description
+      * Update the data in according of the data parameter
+      *
+      * @returns {array} Returns the updated array
+       */
 
       Admin_Person.prototype.$update = function(data) {
         data || (data = this.getPostData());
@@ -1018,6 +1194,22 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
 
 (function() {
   'use strict';
+
+  /***
+  * @ngdoc service
+  * @name BB.Models:AdminResource
+  *
+  * @description
+  * Representation of an Resource Object
+  *
+  * @property {integer} total_entries The total entries
+  * @property {array} resources An array with resources elements
+  * @property {integer} id The resources id
+  * @property {string} name Name of resources
+  * @propertu {string} type Type of resources
+  * @property {boolean} deleted Verify if resources is deleted or not
+  * @property {boolean} disabled Verify if resources is disabled or not
+   */
   var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
@@ -1029,6 +1221,19 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
       function Admin_Resource() {
         return Admin_Resource.__super__.constructor.apply(this, arguments);
       }
+
+
+      /***
+      * @ngdoc method
+      * @name isAvailable
+      * @methodOf BB.Models:AdminResource
+      * @param {date=} start The start date of the availability of the resource
+      * @param {date=} end The end date of the availability of the resource
+      * @description
+      * Look up a schedule for a time range to see if this available
+      *
+      * @returns {string} Returns yes if availability of resource is valid
+       */
 
       Admin_Resource.prototype.isAvailable = function(start, end) {
         var str;
@@ -1065,6 +1270,20 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
 
 (function() {
   'use strict';
+
+  /***
+  * @ngdoc service
+  * @name BB.Models:AdminSchedule
+  *
+  * @description
+  * Representation of an Schedule Object
+  *
+  * @property {integer} id Schedule id
+  * @property {string} rules Schedule rules
+  * @property {string} name Schedule name
+  * @property {integer} company_id The company id
+  * @property {date} duration The schedule duration
+   */
   var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
@@ -1076,6 +1295,17 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
       function Admin_Schedule(data) {
         Admin_Schedule.__super__.constructor.call(this, data);
       }
+
+
+      /***
+      * @ngdoc method
+      * @name getPostData
+      * @methodOf BB.Models:AdminSchedule
+      * @description
+      * Get post data
+      *
+      * @returns {array} Returns data.
+       */
 
       Admin_Schedule.prototype.getPostData = function() {
         var data;
@@ -1097,6 +1327,16 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
 
 (function() {
   'use strict';
+
+  /***
+  * @ngdoc service
+  * @name BB.Models:ScheduleRules
+  *
+  * @description
+  * Representation of an Schedule Rules Object
+  *
+  * @property {object} rules The schedule rules
+   */
   var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   angular.module('BB.Models').factory("ScheduleRules", function() {
@@ -1111,27 +1351,105 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
         this.rules = rules;
       }
 
+
+      /***
+      * @ngdoc method
+      * @name addRange
+      * @methodOf BB.Models:ScheduleRules
+      * @param {date=} start The start date of the range
+      * @param {date=} end The end date of the range
+      * @description
+      * Add date range in according of the start and end parameters
+      *
+      * @returns {date} Returns the added date
+       */
+
       ScheduleRules.prototype.addRange = function(start, end) {
         return this.applyFunctionToDateRange(start, end, 'YYYY-MM-DD', this.addRangeToDate);
       };
+
+
+      /***
+      * @ngdoc method
+      * @name removeRange
+      * @methodOf BB.Models:ScheduleRules
+      * @param {date=} start The start date of the range
+      * @param {date=} end The end date of the range
+      * @description
+      * Remove date range in according of the start and end parameters
+      *
+      * @returns {date} Returns the removed date
+       */
 
       ScheduleRules.prototype.removeRange = function(start, end) {
         return this.applyFunctionToDateRange(start, end, 'YYYY-MM-DD', this.removeRangeFromDate);
       };
 
+
+      /***
+      * @ngdoc method
+      * @name addWeekdayRange
+      * @methodOf BB.Models:ScheduleRules
+      * @param {date=} start The start date of the range
+      * @param {date=} end The end date of the range
+      * @description
+      * Add week day range in according of the start and end parameters
+      *
+      * @returns {date} Returns the week day
+       */
+
       ScheduleRules.prototype.addWeekdayRange = function(start, end) {
         return this.applyFunctionToDateRange(start, end, 'd', this.addRangeToDate);
       };
 
+
+      /***
+      * @ngdoc method
+      * @name removeWeekdayRange
+      * @methodOf BB.Models:ScheduleRules
+      * @param {date=} start The start date of the range
+      * @param {date=} end The end date of the range
+      * @description
+      * Remove week day range in according of the start and end parameters
+      *
+      * @returns {date} Returns removed week day
+       */
+
       ScheduleRules.prototype.removeWeekdayRange = function(start, end) {
         return this.applyFunctionToDateRange(start, end, 'd', this.removeRangeFromDate);
       };
+
+
+      /***
+      * @ngdoc method
+      * @name addRangeToDate
+      * @methodOf BB.Models:ScheduleRules
+      * @param {date=} date The date
+      * @param {array=} range The range of the date
+      * @description
+      * Add range to date in according of the date and range parameters
+      *
+      * @returns {date} Returns the added range of date
+       */
 
       ScheduleRules.prototype.addRangeToDate = function(date, range) {
         var ranges;
         ranges = this.rules[date] ? this.rules[date].split(',') : [];
         return this.rules[date] = this.joinRanges(this.insertRange(ranges, range));
       };
+
+
+      /***
+      * @ngdoc method
+      * @name removeRangeFromDate
+      * @methodOf BB.Models:ScheduleRules
+      * @param {date=} date The date
+      * @param {array=} range The range of the date
+      * @description
+      * Remove range to date in according of the date and range parameters
+      *
+      * @returns {date} Returns the removed range of date
+       */
 
       ScheduleRules.prototype.removeRangeFromDate = function(date, range) {
         var ranges;
@@ -1141,6 +1459,21 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
           return delete this.rules[date];
         }
       };
+
+
+      /***
+      * @ngdoc method
+      * @name applyFunctionToDateRange
+      * @methodOf BB.Models:ScheduleRules
+      * @param {date=} start The start date
+      * @param {date=} end The end date
+      * @param {date=} format The format of the range date
+      * @param {object} func The func of the date and range
+      * @description
+      * Apply date range in according of the start, end, format and func parameters
+      *
+      * @returns {array} Returns the rules
+       */
 
       ScheduleRules.prototype.applyFunctionToDateRange = function(start, end, format, func) {
         var date, days, end_time, j, range, results;
@@ -1176,14 +1509,53 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
         return this.rules;
       };
 
+
+      /***
+      * @ngdoc method
+      * @name diffInDays
+      * @methodOf BB.Models:ScheduleRules
+      * @param {date=} start The start date
+      * @param {date=} end The end date
+      * @description
+      * Difference in days in according of the start and end parameters
+      *
+      * @returns {array} Returns the difference in days
+       */
+
       ScheduleRules.prototype.diffInDays = function(start, end) {
         return moment.duration(end.diff(start)).days();
       };
+
+
+      /***
+      * @ngdoc method
+      * @name insertRange
+      * @methodOf BB.Models:ScheduleRules
+      * @param {object} ranges The ranges
+      * @param {object} range The range
+      * @description
+      * Insert range in according of the ranges and range parameters
+      *
+      * @returns {array} Returns the ranges
+       */
 
       ScheduleRules.prototype.insertRange = function(ranges, range) {
         ranges.splice(_.sortedIndex(ranges, range), 0, range);
         return ranges;
       };
+
+
+      /***
+      * @ngdoc method
+      * @name subtractRange
+      * @methodOf BB.Models:ScheduleRules
+      * @param {object} ranges The ranges
+      * @param {object} range The range
+      * @description
+      * Substract the range in according of the ranges and range parameters
+      *
+      * @returns {array} Returns the range decreasing
+       */
 
       ScheduleRules.prototype.subtractRange = function(ranges, range) {
         if (_.indexOf(ranges, range, true) > -1) {
@@ -1205,6 +1577,18 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
         }
       };
 
+
+      /***
+      * @ngdoc method
+      * @name joinRanges
+      * @methodOf BB.Models:ScheduleRules
+      * @param {object} ranges The ranges
+      * @description
+      * Join ranges
+      *
+      * @returns {array} Returns the range
+       */
+
       ScheduleRules.prototype.joinRanges = function(ranges) {
         return _.reduce(ranges, function(m, range) {
           if (m === '') {
@@ -1221,11 +1605,33 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
         }, "");
       };
 
+
+      /***
+      * @ngdoc method
+      * @name filterRulesByDates
+      * @methodOf BB.Models:ScheduleRules
+      * @description
+      * Filter rules by dates
+      *
+      * @returns {array} Returns the filtered rules by dates
+       */
+
       ScheduleRules.prototype.filterRulesByDates = function() {
         return _.pick(this.rules, function(value, key) {
           return key.match(/^\d{4}-\d{2}-\d{2}$/);
         });
       };
+
+
+      /***
+      * @ngdoc method
+      * @name filterRulesByWeekdays
+      * @methodOf BB.Models:ScheduleRules
+      * @description
+      * Filter rules by week day
+      *
+      * @returns {array} Returns the filtered rules by week day
+       */
 
       ScheduleRules.prototype.filterRulesByWeekdays = function() {
         return _.pick(this.rules, function(value, key) {
@@ -1233,9 +1639,33 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
         });
       };
 
+
+      /***
+      * @ngdoc method
+      * @name formatTime
+      * @methodOf BB.Models:ScheduleRules
+      * @param {date=} time The time 
+      * @description
+      * Format the time in according of the time parameter
+      *
+      * @returns {date} Returns the formated time
+       */
+
       ScheduleRules.prototype.formatTime = function(time) {
         return [time.slice(0, 2), time.slice(2, 4)].join(':');
       };
+
+
+      /***
+      * @ngdoc method
+      * @name toEvents
+      * @methodOf BB.Models:ScheduleRules
+      * @param {array} d The day of events 
+      * @description
+      * Go to events day
+      *
+      * @returns {array} Returns the event start and end time
+       */
 
       ScheduleRules.prototype.toEvents = function(d) {
         if (d) {
@@ -1261,6 +1691,17 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
         }
       };
 
+
+      /***
+      * @ngdoc method
+      * @name toWeekdayEvents
+      * @methodOf BB.Models:ScheduleRules
+      * @description
+      * Go to events week day
+      *
+      * @returns {array} Returns the event of week day
+       */
+
       ScheduleRules.prototype.toWeekdayEvents = function() {
         return _.reduce(this.filterRulesByWeekdays(), (function(_this) {
           return function(memo, ranges, day) {
@@ -1285,6 +1726,23 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
 
 (function() {
   'use strict';
+
+  /***
+  * @ngdoc service
+  * @name BB.Models:AdminService
+  *
+  * @description
+  * Representation of an Service Object
+  *
+  * @property {integer} id Id of the service
+  * @property {string} name The name of service
+  * @property {date} duration Duration of the service
+  * @property {float} prices The prices of the service
+  * @property {integer} detail_group_id The detail group id
+  * @property {date} booking_time_step The time step of the booking
+  * @property {integer} min_bookings The minimum number of bookings
+  * @property {integer} max_booings The maximum number of bookings
+   */
   var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
