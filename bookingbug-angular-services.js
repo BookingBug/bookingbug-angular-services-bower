@@ -855,6 +855,15 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
         })(this));
       };
 
+      Admin_Clinic.prototype.$update = function(data) {
+        data || (data = this);
+        return this.$put('self', {}, data).then((function(_this) {
+          return function(res) {
+            return _this.constructor(res);
+          };
+        })(this));
+      };
+
       return Admin_Clinic;
 
     })(ClinicModel);
