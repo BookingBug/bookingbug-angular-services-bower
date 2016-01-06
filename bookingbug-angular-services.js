@@ -1832,9 +1832,15 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
           });
         } else {
           existing = ClinicCollections.find(params);
-          if (existing) {
+          if (existing && !params.skip_cache) {
             defer.resolve(existing);
           } else {
+            if (params.skip_cache) {
+              if (existing) {
+                ClinicCollections["delete"](existing);
+              }
+              company.$flush('clinics', params);
+            }
             company.$get('clinics', params).then(function(collection) {
               return collection.$get('clinics').then(function(clinics) {
                 var models, s;
