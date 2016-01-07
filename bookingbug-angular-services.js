@@ -1835,8 +1835,11 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
           if (existing && !params.skip_cache) {
             defer.resolve(existing);
           } else {
-            if (existing && params.skip_cache) {
-              ClinicCollections["delete"](existing);
+            if (params.skip_cache) {
+              if (existing) {
+                ClinicCollections["delete"](existing);
+              }
+              company.$flush('clinics', params);
             }
             company.$get('clinics', params).then(function(collection) {
               return collection.$get('clinics').then(function(clinics) {
