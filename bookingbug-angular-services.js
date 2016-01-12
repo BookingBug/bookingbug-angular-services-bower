@@ -110,6 +110,18 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
           return false;
         }
       }
+      if (this.params.start_date) {
+        this.start_date || (this.start_date = moment(this.params.start_date));
+        if (this.start_date.isAfter(item.start_date)) {
+          return false;
+        }
+      }
+      if (this.params.end_date) {
+        this.end_date || (this.end_date = moment(this.params.end_date));
+        if (this.end_date.isBefore(item.end_date)) {
+          return false;
+        }
+      }
       return true;
     };
 
@@ -851,6 +863,15 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
             _this.updateModel(clinic);
             _this.setTimes();
             return _this.setResourcesAndPeople();
+          };
+        })(this));
+      };
+
+      Admin_Clinic.prototype.$update = function(data) {
+        data || (data = this);
+        return this.$put('self', {}, data).then((function(_this) {
+          return function(res) {
+            return _this.constructor(res);
           };
         })(this));
       };
@@ -1811,9 +1832,15 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
           });
         } else {
           existing = ClinicCollections.find(params);
-          if (existing) {
+          if (existing && !params.skip_cache) {
             defer.resolve(existing);
           } else {
+            if (params.skip_cache) {
+              if (existing) {
+                ClinicCollections["delete"](existing);
+              }
+              company.$flush('clinics', params);
+            }
             company.$get('clinics', params).then(function(collection) {
               return collection.$get('clinics').then(function(clinics) {
                 var models, s;
