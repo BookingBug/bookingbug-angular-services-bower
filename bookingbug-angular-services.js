@@ -110,6 +110,18 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
           return false;
         }
       }
+      if (this.params.start_date) {
+        this.start_date || (this.start_date = moment(this.params.start_date));
+        if (this.start_date.isAfter(item.start_date)) {
+          return false;
+        }
+      }
+      if (this.params.end_date) {
+        this.end_date || (this.end_date = moment(this.params.end_date));
+        if (this.end_date.isBefore(item.end_date)) {
+          return false;
+        }
+      }
       return true;
     };
 
@@ -784,6 +796,7 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
         data.start_time = this.start_time;
         data.end_time = this.end_time;
         data.resource_ids = [];
+        data.update_for_repeat = this.update_for_repeat;
         ref = this.resources;
         for (id in ref) {
           en = ref[id];
@@ -1820,9 +1833,15 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
           });
         } else {
           existing = ClinicCollections.find(params);
-          if (existing) {
+          if (existing && !params.skip_cache) {
             defer.resolve(existing);
           } else {
+            if (params.skip_cache) {
+              if (existing) {
+                ClinicCollections["delete"](existing);
+              }
+              company.$flush('clinics', params);
+            }
             company.$get('clinics', params).then(function(collection) {
               return collection.$get('clinics').then(function(clinics) {
                 var models, s;
