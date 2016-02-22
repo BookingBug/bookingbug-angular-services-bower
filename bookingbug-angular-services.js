@@ -140,238 +140,211 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
 }).call(this);
 
 (function() {
-  angular.module('BBAdminServices').directive('personTable', function(AdminCompanyService, AdminPerson, $log, ModalForm) {
-    var controller, link;
-    controller = function($scope) {
-      $scope.fields = ['id', 'name', 'mobile'];
-      $scope.getPeople = function() {
-        return AdminPerson.query($scope.company).then(function(people) {
-          return $scope.people = people;
-        });
-      };
-      $scope.newPerson = function() {
-        return ModalForm["new"]({
-          company: $scope.company,
-          title: 'New Person',
-          new_rel: 'new_person',
-          post_rel: 'people',
-          success: function(person) {
-            return $scope.people.push(person);
-          }
-        });
-      };
-      $scope["delete"] = function(person) {
-        return person.$del('self').then(function() {
-          return $scope.people = _.reject($scope.people, person);
-        }, function(err) {
-          return $log.error("Failed to delete person");
-        });
-      };
-      $scope.edit = function(person) {
-        return ModalForm.edit({
-          model: person,
-          title: 'Edit Person'
-        });
-      };
-      return $scope.schedule = function(person) {
-        return person.$get('schedule').then(function(schedule) {
-          return ModalForm.edit({
-            model: schedule,
-            title: 'Edit Schedule'
-          });
-        });
-      };
-    };
-    link = function(scope, element, attrs) {
-      if (scope.company) {
-        return scope.getPeople();
-      } else {
-        return AdminCompanyService.query(attrs).then(function(company) {
-          scope.company = company;
-          return scope.getPeople();
-        });
-      }
-    };
+  angular.module('BBAdmin.Services').factory('AdminAddressService', function($q, BBModel) {
     return {
-      controller: controller,
-      link: link,
-      templateUrl: 'person_table_main.html'
-    };
-  });
-
-}).call(this);
-
-(function() {
-  angular.module('BBAdminServices').directive('resourceTable', function(AdminCompanyService, AdminResourceService, $modal, $log, ModalForm) {
-    var controller, link;
-    controller = function($scope) {
-      $scope.fields = ['id', 'name'];
-      $scope.getResources = function() {
-        var params;
-        params = {
-          company: $scope.company
-        };
-        return AdminResourceService.query(params).then(function(resources) {
-          return $scope.resources = resources;
-        });
-      };
-      $scope.newResource = function() {
-        return ModalForm["new"]({
-          company: $scope.company,
-          title: 'New Resource',
-          new_rel: 'new_resource',
-          post_rel: 'resources',
-          size: 'lg',
-          success: function(resource) {
-            return $scope.resources.push(resource);
-          }
-        });
-      };
-      $scope["delete"] = function(resource) {
-        return resource.$del('self').then(function() {
-          return $scope.resources = _.reject($scope.resources, function(p) {
-            return p.id === id;
+      query: function(params) {
+        var company, defer;
+        company = params.company;
+        defer = $q.defer();
+        company.$get('addresses').then(function(collection) {
+          return collection.$get('addresses').then(function(addresss) {
+            var models, s;
+            models = (function() {
+              var i, len, results;
+              results = [];
+              for (i = 0, len = addresss.length; i < len; i++) {
+                s = addresss[i];
+                results.push(new BBModel.Admin.Address(s));
+              }
+              return results;
+            })();
+            return defer.resolve(models);
+          }, function(err) {
+            return defer.reject(err);
           });
         }, function(err) {
-          return $log.error("Failed to delete resource");
+          return defer.reject(err);
         });
-      };
-      return $scope.edit = function(resource) {
-        return ModalForm.edit({
-          model: resource,
-          title: 'Edit Resource'
-        });
-      };
-    };
-    link = function(scope, element, attrs) {
-      if (scope.company) {
-        return scope.getResources();
-      } else {
-        return AdminCompanyService.query(attrs).then(function(company) {
-          scope.company = company;
-          return scope.getResources();
-        });
+        return defer.promise;
       }
-    };
-    return {
-      controller: controller,
-      link: link,
-      templateUrl: 'resource_table_main.html'
     };
   });
 
 }).call(this);
 
 (function() {
-  angular.module('BBAdminServices').directive('scheduleCalendar', function(uiCalendarConfig, ScheduleRules) {
-    var controller, link;
-    controller = function($scope, $attrs) {
-      var options;
-      $scope.calendarName = 'scheduleCal';
-      $scope.eventSources = [
-        {
-          events: function(start, end, timezone, callback) {
-            return callback($scope.getEvents());
+  angular.module('BBAdmin.Services').factory('AdminClinicService', function($q, BBModel, ClinicCollections, $window) {
+    return {
+      query: function(params) {
+        var company, defer, existing;
+        company = params.company;
+        defer = $q.defer();
+        if (params.id) {
+          company.$get('clinics', params).then(function(clinic) {
+            clinic = new BBModel.Admin.Clinic(clinic);
+            return defer.resolve(clinic);
+          }, function(err) {
+            return defer.reject(err);
+          });
+        } else {
+          existing = ClinicCollections.find(params);
+          if (existing && !params.skip_cache) {
+            defer.resolve(existing);
+          } else {
+            if (params.skip_cache) {
+              if (existing) {
+                ClinicCollections["delete"](existing);
+              }
+              company.$flush('clinics', params);
+            }
+            company.$get('clinics', params).then(function(collection) {
+              return collection.$get('clinics').then(function(clinics) {
+                var models, s;
+                models = (function() {
+                  var i, len, results;
+                  results = [];
+                  for (i = 0, len = clinics.length; i < len; i++) {
+                    s = clinics[i];
+                    results.push(new BBModel.Admin.Clinic(s));
+                  }
+                  return results;
+                })();
+                clinics = new $window.Collection.Clinic(collection, models, params);
+                ClinicCollections.add(clinics);
+                return defer.resolve(clinics);
+              }, function(err) {
+                return defer.reject(err);
+              });
+            }, function(err) {
+              return defer.reject(err);
+            });
           }
         }
-      ];
-      $scope.getCalendarEvents = function(start, end) {
-        var events;
-        return events = uiCalendarConfig.calendars.scheduleCal.fullCalendar('clientEvents', function(e) {
-          return (start.isAfter(e.start) || start.isSame(e.start)) && (end.isBefore(e.end) || end.isSame(e.end));
-        });
-      };
-      options = $scope.$eval($attrs.scheduleCalendar) || {};
-      $scope.options = {
-        calendar: {
-          editable: false,
-          selectable: true,
-          defaultView: 'agendaSelectAcrossWeek',
-          header: {
-            left: 'today,prev,next',
-            center: 'title',
-            right: 'month,agendaSelectAcrossWeek'
-          },
-          selectHelper: false,
-          eventOverlap: false,
-          lazyFetching: false,
-          views: {
-            agendaSelectAcrossWeek: {
-              duration: {
-                weeks: 1
-              },
-              allDaySlot: false,
-              slotEventOverlap: false,
-              minTime: options.min_time || '00:00:00',
-              maxTime: options.max_time || '24:00:00'
-            }
-          },
-          select: function(start, end, jsEvent, view) {
-            var events;
-            events = $scope.getCalendarEvents(start, end);
-            if (events.length > 0) {
-              return $scope.removeRange(start, end);
+        return defer.promise;
+      },
+      create: function(prms, clinic) {
+        var company, deferred;
+        company = prms.company;
+        deferred = $q.defer();
+        company.$post('clinics', {}, clinic.getPostData()).then((function(_this) {
+          return function(clinic) {
+            clinic = new BBModel.Admin.Clinic(clinic);
+            ClinicCollections.checkItems(clinic);
+            return deferred.resolve(clinic);
+          };
+        })(this), (function(_this) {
+          return function(err) {
+            return deferred.reject(err);
+          };
+        })(this));
+        return deferred.promise;
+      },
+      cancel: function(clinic) {
+        var deferred;
+        deferred = $q.defer();
+        clinic.$post('cancel', clinic).then((function(_this) {
+          return function(clinic) {
+            clinic = new BBModel.Admin.Clinic(clinic);
+            ClinicCollections.deleteItems(clinic);
+            return deferred.resolve(clinic);
+          };
+        })(this), (function(_this) {
+          return function(err) {
+            return deferred.reject(err);
+          };
+        })(this));
+        return deferred.promise;
+      },
+      update: function(clinic) {
+        var deferred;
+        deferred = $q.defer();
+        clinic.$put('self', {}, clinic.getPostData()).then((function(_this) {
+          return function(c) {
+            clinic = new BBModel.Admin.Clinic(c);
+            ClinicCollections.checkItems(clinic);
+            return deferred.resolve(clinic);
+          };
+        })(this), (function(_this) {
+          return function(err) {
+            return deferred.reject(err);
+          };
+        })(this));
+        return deferred.promise;
+      }
+    };
+  });
+
+}).call(this);
+
+(function() {
+  angular.module('BBAdminServices').factory('AdminPersonService', function($q, $window, $rootScope, halClient, SlotCollections, BBModel, LoginService, $log) {
+    return {
+      query: function(params) {
+        var company, defer;
+        company = params.company;
+        defer = $q.defer();
+        if (company.$has('people')) {
+          company.$get('people').then(function(collection) {
+            return collection.$get('people').then(function(people) {
+              var models, p;
+              models = (function() {
+                var i, len, results;
+                results = [];
+                for (i = 0, len = people.length; i < len; i++) {
+                  p = people[i];
+                  results.push(new BBModel.Admin.Person(p));
+                }
+                return results;
+              })();
+              return defer.resolve(models);
+            }, function(err) {
+              return defer.reject(err);
+            });
+          }, function(err) {
+            return defer.reject(err);
+          });
+        } else {
+          $log.warn('company has no people link');
+          defer.reject('company has no people link');
+        }
+        return defer.promise;
+      },
+      block: function(company, person, data) {
+        var deferred;
+        deferred = $q.defer();
+        person.$put('block', {}, data).then((function(_this) {
+          return function(slot) {
+            slot = new BBModel.Admin.Slot(slot);
+            SlotCollections.checkItems(slot);
+            return deferred.resolve(slot);
+          };
+        })(this), (function(_this) {
+          return function(err) {
+            return deferred.reject(err);
+          };
+        })(this));
+        return deferred.promise;
+      },
+      signup: function(user, data) {
+        var defer;
+        defer = $q.defer();
+        return user.$get('company').then(function(company) {
+          var params;
+          params = {};
+          company.$post('people', params, data).then(function(person) {
+            if (person.$has('administrator')) {
+              return person.$get('administrator').then(function(user) {
+                LoginService.setLogin(user);
+                return defer.resolve(person);
+              });
             } else {
-              return $scope.addRange(start, end);
+              return defer.resolve(person);
             }
-          },
-          eventResizeStop: function(event, jsEvent, ui, view) {
-            return $scope.addRange(event.start, event.end);
-          },
-          eventDrop: function(event, delta, revertFunc, jsEvent, ui, view) {
-            var orig;
-            if (event.start.hasTime()) {
-              orig = {
-                start: moment(event.start).subtract(delta),
-                end: moment(event.end).subtract(delta)
-              };
-              $scope.removeRange(orig.start, orig.end);
-              return $scope.addRange(event.start, event.end);
-            }
-          },
-          eventClick: function(event, jsEvent, view) {
-            return $scope.removeRange(event.start, event.end);
-          }
-        }
-      };
-      return $scope.render = function() {
-        return uiCalendarConfig.calendars.scheduleCal.fullCalendar('render');
-      };
-    };
-    link = function(scope, element, attrs, ngModel) {
-      var scheduleRules;
-      scheduleRules = function() {
-        return new ScheduleRules(ngModel.$viewValue);
-      };
-      scope.getEvents = function() {
-        return scheduleRules().toEvents();
-      };
-      scope.addRange = function(start, end) {
-        ngModel.$setViewValue(scheduleRules().addRange(start, end));
-        return ngModel.$render();
-      };
-      scope.removeRange = function(start, end) {
-        ngModel.$setViewValue(scheduleRules().removeRange(start, end));
-        return ngModel.$render();
-      };
-      scope.toggleRange = function(start, end) {
-        ngModel.$setViewValue(scheduleRules().toggleRange(start, end));
-        return ngModel.$render();
-      };
-      return ngModel.$render = function() {
-        if (uiCalendarConfig && uiCalendarConfig.calendars.scheduleCal) {
-          uiCalendarConfig.calendars.scheduleCal.fullCalendar('refetchEvents');
-          return uiCalendarConfig.calendars.scheduleCal.fullCalendar('unselect');
-        }
-      };
-    };
-    return {
-      controller: controller,
-      link: link,
-      templateUrl: 'schedule_cal_main.html',
-      require: 'ngModel',
-      scope: {
-        render: '=?'
+          }, function(err) {
+            return defer.reject(err);
+          });
+          return defer.promise;
+        });
       }
     };
   });
@@ -379,258 +352,263 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
 }).call(this);
 
 (function() {
-  angular.module('BBAdminServices').directive('scheduleEdit', function() {
-    var link;
-    link = function(scope, element, attrs, ngModel) {
-      ngModel.$render = function() {
-        return scope.$$value$$ = ngModel.$viewValue;
-      };
-      return scope.$watch('$$value$$', function(value) {
-        if (value != null) {
-          return ngModel.$setViewValue(value);
-        }
-      });
-    };
+  angular.module('BBAdmin.Services').factory('AdminResourceService', function($q, UriTemplate, halClient, SlotCollections, BBModel) {
     return {
-      link: link,
-      templateUrl: 'schedule_edit_main.html',
-      require: 'ngModel'
-    };
-  });
-
-  angular.module('schemaForm').config(function(schemaFormProvider, schemaFormDecoratorsProvider, sfPathProvider) {
-    schemaFormDecoratorsProvider.addMapping('bootstrapDecorator', 'schedule', 'schedule_edit_form.html');
-    return schemaFormDecoratorsProvider.createDirective('schedule', 'schedule_edit_form.html');
-  });
-
-}).call(this);
-
-(function() {
-  angular.module('BBAdminServices').directive('scheduleTable', function(AdminCompanyService, AdminScheduleService, $modal, $log, ModalForm) {
-    var controller, link;
-    controller = function($scope) {
-      $scope.fields = ['id', 'name', 'mobile'];
-      $scope.getSchedules = function() {
-        var params;
-        params = {
-          company: $scope.company
-        };
-        return AdminScheduleService.query(params).then(function(schedules) {
-          return $scope.schedules = schedules;
-        });
-      };
-      $scope.newSchedule = function() {
-        return ModalForm["new"]({
-          company: $scope.company,
-          title: 'New Schedule',
-          new_rel: 'new_schedule',
-          post_rel: 'schedules',
-          size: 'lg',
-          success: function(schedule) {
-            return $scope.schedules.push(schedule);
-          }
-        });
-      };
-      $scope["delete"] = function(schedule) {
-        return schedule.$del('self').then(function() {
-          return $scope.schedules = _.reject($scope.schedules, schedule);
+      query: function(params) {
+        var company, defer;
+        company = params.company;
+        defer = $q.defer();
+        company.$get('resources').then(function(collection) {
+          return collection.$get('resources').then(function(resources) {
+            var models, r;
+            models = (function() {
+              var i, len, results;
+              results = [];
+              for (i = 0, len = resources.length; i < len; i++) {
+                r = resources[i];
+                results.push(new BBModel.Admin.Resource(r));
+              }
+              return results;
+            })();
+            return defer.resolve(models);
+          }, function(err) {
+            return defer.reject(err);
+          });
         }, function(err) {
-          return $log.error("Failed to delete schedule");
+          return defer.reject(err);
         });
-      };
-      return $scope.edit = function(schedule) {
-        return ModalForm.edit({
-          model: schedule,
-          title: 'Edit Schedule',
-          size: 'lg'
-        });
-      };
-    };
-    link = function(scope, element, attrs) {
-      if (scope.company) {
-        return scope.getSchedules();
-      } else {
-        return AdminCompanyService.query(attrs).then(function(company) {
-          scope.company = company;
-          return scope.getSchedules();
-        });
-      }
-    };
-    return {
-      controller: controller,
-      link: link,
-      templateUrl: 'schedule_table_main.html'
-    };
-  });
-
-}).call(this);
-
-(function() {
-  angular.module('BBAdminServices').directive('scheduleWeekdays', function(uiCalendarConfig, ScheduleRules) {
-    var controller, link;
-    controller = function($scope, $attrs) {
-      var options;
-      $scope.calendarName = 'scheduleWeekdays';
-      $scope.eventSources = [
-        {
-          events: function(start, end, timezone, callback) {
-            return callback($scope.getEvents());
-          }
-        }
-      ];
-      $scope.getCalendarEvents = function(start, end) {
-        var events;
-        return events = uiCalendarConfig.calendars.scheduleWeekdays.fullCalendar('clientEvents', function(e) {
-          return (start.isAfter(e.start) || start.isSame(e.start)) && (end.isBefore(e.end) || end.isSame(e.end));
-        });
-      };
-      options = $scope.$eval($attrs.scheduleWeekdays) || {};
-      $scope.options = {
-        calendar: {
-          editable: false,
-          selectable: true,
-          defaultView: 'agendaSelectAcrossWeek',
-          header: {
-            left: '',
-            center: 'title',
-            right: ''
-          },
-          selectHelper: false,
-          eventOverlap: false,
-          views: {
-            agendaSelectAcrossWeek: {
-              duration: {
-                weeks: 1
-              },
-              titleFormat: '[]',
-              allDaySlot: false,
-              columnFormat: 'ddd',
-              slotEventOverlap: false,
-              minTime: options.min_time || '00:00:00',
-              maxTime: options.max_time || '24:00:00'
-            }
-          },
-          select: function(start, end, jsEvent, view) {
-            var events;
-            events = $scope.getCalendarEvents(start, end);
-            if (events.length > 0) {
-              return $scope.removeRange(start, end);
-            } else {
-              return $scope.addRange(start, end);
-            }
-          },
-          eventResizeStop: function(event, jsEvent, ui, view) {
-            return $scope.addRange(event.start, event.end);
-          },
-          eventDrop: function(event, delta, revertFunc, jsEvent, ui, view) {
-            var orig;
-            if (event.start.hasTime()) {
-              orig = {
-                start: moment(event.start).subtract(delta),
-                end: moment(event.end).subtract(delta)
-              };
-              $scope.removeRange(orig.start, orig.end);
-              return $scope.addRange(event.start, event.end);
-            }
-          },
-          eventClick: function(event, jsEvent, view) {
-            return $scope.removeRange(event.start, event.end);
-          }
-        }
-      };
-      return $scope.render = function() {
-        return uiCalendarConfig.calendars.scheduleWeekdays.fullCalendar('render');
-      };
-    };
-    link = function(scope, element, attrs, ngModel) {
-      var scheduleRules;
-      scheduleRules = function() {
-        return new ScheduleRules(ngModel.$viewValue);
-      };
-      scope.getEvents = function() {
-        return scheduleRules().toWeekdayEvents();
-      };
-      scope.addRange = function(start, end) {
-        ngModel.$setViewValue(scheduleRules().addWeekdayRange(start, end));
-        return ngModel.$render();
-      };
-      scope.removeRange = function(start, end) {
-        ngModel.$setViewValue(scheduleRules().removeWeekdayRange(start, end));
-        return ngModel.$render();
-      };
-      return ngModel.$render = function() {
-        if (uiCalendarConfig && uiCalendarConfig.calendars.scheduleWeekdays) {
-          uiCalendarConfig.calendars.scheduleWeekdays.fullCalendar('refetchEvents');
-          return uiCalendarConfig.calendars.scheduleWeekdays.fullCalendar('unselect');
-        }
-      };
-    };
-    return {
-      controller: controller,
-      link: link,
-      templateUrl: 'schedule_cal_main.html',
-      require: 'ngModel',
-      scope: {
-        render: '=?'
-      }
-    };
-  });
-
-}).call(this);
-
-(function() {
-  angular.module('BBAdminServices').directive('serviceTable', function(AdminCompanyService, AdminServiceService, $modal, $log, ModalForm) {
-    var controller, link;
-    controller = function($scope) {
-      $scope.fields = ['id', 'name'];
-      $scope.getServices = function() {
-        var params;
-        params = {
-          company: $scope.company
+        return defer.promise;
+      },
+      block: function(company, resource, data) {
+        var deferred, href, prms, uri;
+        prms = {
+          id: resource.id,
+          company_id: company.id
         };
-        return AdminServiceService.query(params).then(function(services) {
-          return $scope.services = services;
-        });
-      };
-      $scope.newService = function() {
-        return ModalForm["new"]({
-          company: $scope.company,
-          title: 'New Service',
-          new_rel: 'new_service',
-          post_rel: 'services',
-          success: function(service) {
-            return $scope.services.push(service);
-          }
-        });
-      };
-      $scope["delete"] = function(service) {
-        return service.$del('self').then(function() {
-          return $scope.services = _.reject($scope.services, service);
-        }, function(err) {
-          return $log.error("Failed to delete service");
-        });
-      };
-      return $scope.edit = function(service) {
-        return ModalForm.edit({
-          model: service,
-          title: 'Edit Service'
-        });
-      };
-    };
-    link = function(scope, element, attrs) {
-      if (scope.company) {
-        return scope.getServices();
-      } else {
-        return AdminCompanyService.query(attrs).then(function(company) {
-          scope.company = company;
-          return scope.getServices();
-        });
+        deferred = $q.defer();
+        href = "/api/v1/admin/{company_id}/resource/{id}/block";
+        uri = new UriTemplate(href).fillFromObject(prms || {});
+        halClient.$put(uri, {}, data).then((function(_this) {
+          return function(slot) {
+            slot = new BBModel.Admin.Slot(slot);
+            SlotCollections.checkItems(slot);
+            return deferred.resolve(slot);
+          };
+        })(this), (function(_this) {
+          return function(err) {
+            return deferred.reject(err);
+          };
+        })(this));
+        return deferred.promise;
       }
     };
+  });
+
+}).call(this);
+
+(function() {
+  angular.module('BBAdmin.Services').factory('AdminScheduleService', function($q, BBModel) {
     return {
-      controller: controller,
-      link: link,
-      templateUrl: 'service_table_main.html'
+      query: function(params) {
+        var company, defer;
+        company = params.company;
+        defer = $q.defer();
+        company.$get('schedules').then(function(collection) {
+          return collection.$get('schedules').then(function(schedules) {
+            var models, s;
+            models = (function() {
+              var i, len, results;
+              results = [];
+              for (i = 0, len = schedules.length; i < len; i++) {
+                s = schedules[i];
+                results.push(new BBModel.Admin.Schedule(s));
+              }
+              return results;
+            })();
+            return defer.resolve(models);
+          }, function(err) {
+            return defer.reject(err);
+          });
+        }, function(err) {
+          return defer.reject(err);
+        });
+        return defer.promise;
+      },
+      "delete": function(schedule) {
+        var deferred;
+        deferred = $q.defer();
+        schedule.$del('self').then((function(_this) {
+          return function(schedule) {
+            schedule = new BBModel.Admin.Schedule(schedule);
+            return deferred.resolve(schedule);
+          };
+        })(this), (function(_this) {
+          return function(err) {
+            return deferred.reject(err);
+          };
+        })(this));
+        return deferred.promise;
+      },
+      update: function(schedule) {
+        var deferred;
+        deferred = $q.defer();
+        return schedule.$put('self', {}, schedule.getPostData()).then((function(_this) {
+          return function(c) {
+            schedule = new BBModel.Admin.Schedule(c);
+            return deferred.resolve(schedule);
+          };
+        })(this), (function(_this) {
+          return function(err) {
+            return deferred.reject(err);
+          };
+        })(this));
+      }
+    };
+  });
+
+}).call(this);
+
+(function() {
+  angular.module('BBAdmin.Services').factory('AdminServiceService', function($q, BBModel, $log) {
+    return {
+      query: function(params) {
+        var company, defer;
+        company = params.company;
+        defer = $q.defer();
+        company.$get('services').then(function(collection) {
+          return collection.$get('services').then(function(services) {
+            var models, s;
+            models = (function() {
+              var i, len, results;
+              results = [];
+              for (i = 0, len = services.length; i < len; i++) {
+                s = services[i];
+                results.push(new BBModel.Admin.Service(s));
+              }
+              return results;
+            })();
+            return defer.resolve(models);
+          }, function(err) {
+            return defer.reject(err);
+          });
+        }, function(err) {
+          return defer.reject(err);
+        });
+        return defer.promise;
+      }
+    };
+  });
+
+}).call(this);
+
+(function() {
+  angular.module('BBAdminServices').factory("BB.Service.schedule", function($q, BBModel) {
+    return {
+      unwrap: function(resource) {
+        return new BBModel.Admin.Schedule(resource);
+      }
+    };
+  });
+
+  angular.module('BBAdminServices').factory("BB.Service.person", function($q, BBModel) {
+    return {
+      unwrap: function(resource) {
+        return new BBModel.Admin.Person(resource);
+      }
+    };
+  });
+
+  angular.module('BBAdminServices').factory("BB.Service.people", function($q, BBModel) {
+    return {
+      promise: true,
+      unwrap: function(resource) {
+        var deferred;
+        deferred = $q.defer();
+        resource.$get('people').then((function(_this) {
+          return function(items) {
+            var i, j, len, models;
+            models = [];
+            for (j = 0, len = items.length; j < len; j++) {
+              i = items[j];
+              models.push(new BBModel.Admin.Person(i));
+            }
+            return deferred.resolve(models);
+          };
+        })(this), (function(_this) {
+          return function(err) {
+            return deferred.reject(err);
+          };
+        })(this));
+        return deferred.promise;
+      }
+    };
+  });
+
+  angular.module('BBAdminServices').factory("BB.Service.resource", function($q, BBModel) {
+    return {
+      unwrap: function(resource) {
+        return new BBModel.Admin.Resource(resource);
+      }
+    };
+  });
+
+  angular.module('BBAdminServices').factory("BB.Service.resources", function($q, BBModel) {
+    return {
+      promise: true,
+      unwrap: function(resource) {
+        var deferred;
+        deferred = $q.defer();
+        resource.$get('resources').then((function(_this) {
+          return function(items) {
+            var i, j, len, models;
+            models = [];
+            for (j = 0, len = items.length; j < len; j++) {
+              i = items[j];
+              models.push(new BBModel.Admin.Resource(i));
+            }
+            return deferred.resolve(models);
+          };
+        })(this), (function(_this) {
+          return function(err) {
+            return deferred.reject(err);
+          };
+        })(this));
+        return deferred.promise;
+      }
+    };
+  });
+
+  angular.module('BBAdminServices').factory("BB.Service.service", function($q, BBModel) {
+    return {
+      unwrap: function(resource) {
+        return new BBModel.Admin.Service(resource);
+      }
+    };
+  });
+
+  angular.module('BBAdminServices').factory("BB.Service.services", function($q, BBModel) {
+    return {
+      promise: true,
+      unwrap: function(resource) {
+        var deferred;
+        deferred = $q.defer();
+        resource.$get('services').then((function(_this) {
+          return function(items) {
+            var i, j, len, models;
+            models = [];
+            for (j = 0, len = items.length; j < len; j++) {
+              i = items[j];
+              models.push(new BBModel.Admin.Service(i));
+            }
+            return deferred.resolve(models);
+          };
+        })(this), (function(_this) {
+          return function(err) {
+            return deferred.reject(err);
+          };
+        })(this));
+        return deferred.promise;
+      }
     };
   });
 
@@ -1785,211 +1763,238 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
 }).call(this);
 
 (function() {
-  angular.module('BBAdmin.Services').factory('AdminAddressService', function($q, BBModel) {
-    return {
-      query: function(params) {
-        var company, defer;
-        company = params.company;
-        defer = $q.defer();
-        company.$get('addresses').then(function(collection) {
-          return collection.$get('addresses').then(function(addresss) {
-            var models, s;
-            models = (function() {
-              var i, len, results;
-              results = [];
-              for (i = 0, len = addresss.length; i < len; i++) {
-                s = addresss[i];
-                results.push(new BBModel.Admin.Address(s));
-              }
-              return results;
-            })();
-            return defer.resolve(models);
-          }, function(err) {
-            return defer.reject(err);
-          });
-        }, function(err) {
-          return defer.reject(err);
+  angular.module('BBAdminServices').directive('personTable', function(AdminCompanyService, AdminPerson, $log, ModalForm) {
+    var controller, link;
+    controller = function($scope) {
+      $scope.fields = ['id', 'name', 'mobile'];
+      $scope.getPeople = function() {
+        return AdminPerson.query($scope.company).then(function(people) {
+          return $scope.people = people;
         });
-        return defer.promise;
+      };
+      $scope.newPerson = function() {
+        return ModalForm["new"]({
+          company: $scope.company,
+          title: 'New Person',
+          new_rel: 'new_person',
+          post_rel: 'people',
+          success: function(person) {
+            return $scope.people.push(person);
+          }
+        });
+      };
+      $scope["delete"] = function(person) {
+        return person.$del('self').then(function() {
+          return $scope.people = _.reject($scope.people, person);
+        }, function(err) {
+          return $log.error("Failed to delete person");
+        });
+      };
+      $scope.edit = function(person) {
+        return ModalForm.edit({
+          model: person,
+          title: 'Edit Person'
+        });
+      };
+      return $scope.schedule = function(person) {
+        return person.$get('schedule').then(function(schedule) {
+          return ModalForm.edit({
+            model: schedule,
+            title: 'Edit Schedule'
+          });
+        });
+      };
+    };
+    link = function(scope, element, attrs) {
+      if (scope.company) {
+        return scope.getPeople();
+      } else {
+        return AdminCompanyService.query(attrs).then(function(company) {
+          scope.company = company;
+          return scope.getPeople();
+        });
       }
+    };
+    return {
+      controller: controller,
+      link: link,
+      templateUrl: 'person_table_main.html'
     };
   });
 
 }).call(this);
 
 (function() {
-  angular.module('BBAdmin.Services').factory('AdminClinicService', function($q, BBModel, ClinicCollections, $window) {
-    return {
-      query: function(params) {
-        var company, defer, existing;
-        company = params.company;
-        defer = $q.defer();
-        if (params.id) {
-          company.$get('clinics', params).then(function(clinic) {
-            clinic = new BBModel.Admin.Clinic(clinic);
-            return defer.resolve(clinic);
-          }, function(err) {
-            return defer.reject(err);
+  angular.module('BBAdminServices').directive('resourceTable', function(AdminCompanyService, AdminResourceService, $modal, $log, ModalForm) {
+    var controller, link;
+    controller = function($scope) {
+      $scope.fields = ['id', 'name'];
+      $scope.getResources = function() {
+        var params;
+        params = {
+          company: $scope.company
+        };
+        return AdminResourceService.query(params).then(function(resources) {
+          return $scope.resources = resources;
+        });
+      };
+      $scope.newResource = function() {
+        return ModalForm["new"]({
+          company: $scope.company,
+          title: 'New Resource',
+          new_rel: 'new_resource',
+          post_rel: 'resources',
+          size: 'lg',
+          success: function(resource) {
+            return $scope.resources.push(resource);
+          }
+        });
+      };
+      $scope["delete"] = function(resource) {
+        return resource.$del('self').then(function() {
+          return $scope.resources = _.reject($scope.resources, function(p) {
+            return p.id === id;
           });
-        } else {
-          existing = ClinicCollections.find(params);
-          if (existing && !params.skip_cache) {
-            defer.resolve(existing);
-          } else {
-            if (params.skip_cache) {
-              if (existing) {
-                ClinicCollections["delete"](existing);
-              }
-              company.$flush('clinics', params);
-            }
-            company.$get('clinics', params).then(function(collection) {
-              return collection.$get('clinics').then(function(clinics) {
-                var models, s;
-                models = (function() {
-                  var i, len, results;
-                  results = [];
-                  for (i = 0, len = clinics.length; i < len; i++) {
-                    s = clinics[i];
-                    results.push(new BBModel.Admin.Clinic(s));
-                  }
-                  return results;
-                })();
-                clinics = new $window.Collection.Clinic(collection, models, params);
-                ClinicCollections.add(clinics);
-                return defer.resolve(clinics);
-              }, function(err) {
-                return defer.reject(err);
-              });
-            }, function(err) {
-              return defer.reject(err);
-            });
+        }, function(err) {
+          return $log.error("Failed to delete resource");
+        });
+      };
+      return $scope.edit = function(resource) {
+        return ModalForm.edit({
+          model: resource,
+          title: 'Edit Resource'
+        });
+      };
+    };
+    link = function(scope, element, attrs) {
+      if (scope.company) {
+        return scope.getResources();
+      } else {
+        return AdminCompanyService.query(attrs).then(function(company) {
+          scope.company = company;
+          return scope.getResources();
+        });
+      }
+    };
+    return {
+      controller: controller,
+      link: link,
+      templateUrl: 'resource_table_main.html'
+    };
+  });
+
+}).call(this);
+
+(function() {
+  angular.module('BBAdminServices').directive('scheduleCalendar', function(uiCalendarConfig, ScheduleRules) {
+    var controller, link;
+    controller = function($scope, $attrs) {
+      var options;
+      $scope.calendarName = 'scheduleCal';
+      $scope.eventSources = [
+        {
+          events: function(start, end, timezone, callback) {
+            return callback($scope.getEvents());
           }
         }
-        return defer.promise;
-      },
-      create: function(prms, clinic) {
-        var company, deferred;
-        company = prms.company;
-        deferred = $q.defer();
-        company.$post('clinics', {}, clinic.getPostData()).then((function(_this) {
-          return function(clinic) {
-            clinic = new BBModel.Admin.Clinic(clinic);
-            ClinicCollections.checkItems(clinic);
-            return deferred.resolve(clinic);
-          };
-        })(this), (function(_this) {
-          return function(err) {
-            return deferred.reject(err);
-          };
-        })(this));
-        return deferred.promise;
-      },
-      cancel: function(clinic) {
-        var deferred;
-        deferred = $q.defer();
-        clinic.$post('cancel', clinic).then((function(_this) {
-          return function(clinic) {
-            clinic = new BBModel.Admin.Clinic(clinic);
-            ClinicCollections.deleteItems(clinic);
-            return deferred.resolve(clinic);
-          };
-        })(this), (function(_this) {
-          return function(err) {
-            return deferred.reject(err);
-          };
-        })(this));
-        return deferred.promise;
-      },
-      update: function(clinic) {
-        var deferred;
-        deferred = $q.defer();
-        clinic.$put('self', {}, clinic.getPostData()).then((function(_this) {
-          return function(c) {
-            clinic = new BBModel.Admin.Clinic(c);
-            ClinicCollections.checkItems(clinic);
-            return deferred.resolve(clinic);
-          };
-        })(this), (function(_this) {
-          return function(err) {
-            return deferred.reject(err);
-          };
-        })(this));
-        return deferred.promise;
-      }
-    };
-  });
-
-}).call(this);
-
-(function() {
-  angular.module('BBAdminServices').factory('AdminPersonService', function($q, $window, $rootScope, halClient, SlotCollections, BBModel, LoginService, $log) {
-    return {
-      query: function(params) {
-        var company, defer;
-        company = params.company;
-        defer = $q.defer();
-        if (company.$has('people')) {
-          company.$get('people').then(function(collection) {
-            return collection.$get('people').then(function(people) {
-              var models, p;
-              models = (function() {
-                var i, len, results;
-                results = [];
-                for (i = 0, len = people.length; i < len; i++) {
-                  p = people[i];
-                  results.push(new BBModel.Admin.Person(p));
-                }
-                return results;
-              })();
-              return defer.resolve(models);
-            }, function(err) {
-              return defer.reject(err);
-            });
-          }, function(err) {
-            return defer.reject(err);
-          });
-        } else {
-          $log.warn('company has no people link');
-          defer.reject('company has no people link');
-        }
-        return defer.promise;
-      },
-      block: function(company, person, data) {
-        var deferred;
-        deferred = $q.defer();
-        person.$put('block', {}, data).then((function(_this) {
-          return function(slot) {
-            slot = new BBModel.Admin.Slot(slot);
-            SlotCollections.checkItems(slot);
-            return deferred.resolve(slot);
-          };
-        })(this), (function(_this) {
-          return function(err) {
-            return deferred.reject(err);
-          };
-        })(this));
-        return deferred.promise;
-      },
-      signup: function(user, data) {
-        var defer;
-        defer = $q.defer();
-        return user.$get('company').then(function(company) {
-          var params;
-          params = {};
-          company.$post('people', params, data).then(function(person) {
-            if (person.$has('administrator')) {
-              return person.$get('administrator').then(function(user) {
-                LoginService.setLogin(user);
-                return defer.resolve(person);
-              });
+      ];
+      $scope.getCalendarEvents = function(start, end) {
+        var events;
+        return events = uiCalendarConfig.calendars.scheduleCal.fullCalendar('clientEvents', function(e) {
+          return (start.isAfter(e.start) || start.isSame(e.start)) && (end.isBefore(e.end) || end.isSame(e.end));
+        });
+      };
+      options = $scope.$eval($attrs.scheduleCalendar) || {};
+      $scope.options = {
+        calendar: {
+          editable: false,
+          selectable: true,
+          defaultView: 'agendaSelectAcrossWeek',
+          header: {
+            left: 'today,prev,next',
+            center: 'title',
+            right: 'month,agendaSelectAcrossWeek'
+          },
+          selectHelper: false,
+          eventOverlap: false,
+          lazyFetching: false,
+          views: {
+            agendaSelectAcrossWeek: {
+              duration: {
+                weeks: 1
+              },
+              allDaySlot: false,
+              slotEventOverlap: false,
+              minTime: options.min_time || '00:00:00',
+              maxTime: options.max_time || '24:00:00'
+            }
+          },
+          select: function(start, end, jsEvent, view) {
+            var events;
+            events = $scope.getCalendarEvents(start, end);
+            if (events.length > 0) {
+              return $scope.removeRange(start, end);
             } else {
-              return defer.resolve(person);
+              return $scope.addRange(start, end);
             }
-          }, function(err) {
-            return defer.reject(err);
-          });
-          return defer.promise;
-        });
+          },
+          eventResizeStop: function(event, jsEvent, ui, view) {
+            return $scope.addRange(event.start, event.end);
+          },
+          eventDrop: function(event, delta, revertFunc, jsEvent, ui, view) {
+            var orig;
+            if (event.start.hasTime()) {
+              orig = {
+                start: moment(event.start).subtract(delta),
+                end: moment(event.end).subtract(delta)
+              };
+              $scope.removeRange(orig.start, orig.end);
+              return $scope.addRange(event.start, event.end);
+            }
+          },
+          eventClick: function(event, jsEvent, view) {
+            return $scope.removeRange(event.start, event.end);
+          }
+        }
+      };
+      return $scope.render = function() {
+        return uiCalendarConfig.calendars.scheduleCal.fullCalendar('render');
+      };
+    };
+    link = function(scope, element, attrs, ngModel) {
+      var scheduleRules;
+      scheduleRules = function() {
+        return new ScheduleRules(ngModel.$viewValue);
+      };
+      scope.getEvents = function() {
+        return scheduleRules().toEvents();
+      };
+      scope.addRange = function(start, end) {
+        ngModel.$setViewValue(scheduleRules().addRange(start, end));
+        return ngModel.$render();
+      };
+      scope.removeRange = function(start, end) {
+        ngModel.$setViewValue(scheduleRules().removeRange(start, end));
+        return ngModel.$render();
+      };
+      scope.toggleRange = function(start, end) {
+        ngModel.$setViewValue(scheduleRules().toggleRange(start, end));
+        return ngModel.$render();
+      };
+      return ngModel.$render = function() {
+        if (uiCalendarConfig && uiCalendarConfig.calendars.scheduleCal) {
+          uiCalendarConfig.calendars.scheduleCal.fullCalendar('refetchEvents');
+          return uiCalendarConfig.calendars.scheduleCal.fullCalendar('unselect');
+        }
+      };
+    };
+    return {
+      controller: controller,
+      link: link,
+      templateUrl: 'schedule_cal_main.html',
+      require: 'ngModel',
+      scope: {
+        render: '=?'
       }
     };
   });
@@ -1997,149 +2002,199 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
 }).call(this);
 
 (function() {
-  angular.module('BBAdmin.Services').factory('AdminResourceService', function($q, UriTemplate, halClient, SlotCollections, BBModel) {
+  angular.module('BBAdminServices').directive('scheduleEdit', function() {
+    var link;
+    link = function(scope, element, attrs, ngModel) {
+      ngModel.$render = function() {
+        return scope.$$value$$ = ngModel.$viewValue;
+      };
+      return scope.$watch('$$value$$', function(value) {
+        if (value != null) {
+          return ngModel.$setViewValue(value);
+        }
+      });
+    };
     return {
-      query: function(params) {
-        var company, defer;
-        company = params.company;
-        defer = $q.defer();
-        company.$get('resources').then(function(collection) {
-          return collection.$get('resources').then(function(resources) {
-            var models, r;
-            models = (function() {
-              var i, len, results;
-              results = [];
-              for (i = 0, len = resources.length; i < len; i++) {
-                r = resources[i];
-                results.push(new BBModel.Admin.Resource(r));
-              }
-              return results;
-            })();
-            return defer.resolve(models);
-          }, function(err) {
-            return defer.reject(err);
-          });
-        }, function(err) {
-          return defer.reject(err);
-        });
-        return defer.promise;
-      },
-      block: function(company, resource, data) {
-        var deferred, href, prms, uri;
-        prms = {
-          id: resource.id,
-          company_id: company.id
+      link: link,
+      templateUrl: 'schedule_edit_main.html',
+      require: 'ngModel'
+    };
+  });
+
+  angular.module('schemaForm').config(function(schemaFormProvider, schemaFormDecoratorsProvider, sfPathProvider) {
+    schemaFormDecoratorsProvider.addMapping('bootstrapDecorator', 'schedule', 'schedule_edit_form.html');
+    return schemaFormDecoratorsProvider.createDirective('schedule', 'schedule_edit_form.html');
+  });
+
+}).call(this);
+
+(function() {
+  angular.module('BBAdminServices').directive('scheduleTable', function(AdminCompanyService, AdminScheduleService, $modal, $log, ModalForm) {
+    var controller, link;
+    controller = function($scope) {
+      $scope.fields = ['id', 'name', 'mobile'];
+      $scope.getSchedules = function() {
+        var params;
+        params = {
+          company: $scope.company
         };
-        deferred = $q.defer();
-        href = "/api/v1/admin/{company_id}/resource/{id}/block";
-        uri = new UriTemplate(href).fillFromObject(prms || {});
-        halClient.$put(uri, {}, data).then((function(_this) {
-          return function(slot) {
-            slot = new BBModel.Admin.Slot(slot);
-            SlotCollections.checkItems(slot);
-            return deferred.resolve(slot);
-          };
-        })(this), (function(_this) {
-          return function(err) {
-            return deferred.reject(err);
-          };
-        })(this));
-        return deferred.promise;
-      }
-    };
-  });
-
-}).call(this);
-
-(function() {
-  angular.module('BBAdmin.Services').factory('AdminScheduleService', function($q, BBModel) {
-    return {
-      query: function(params) {
-        var company, defer;
-        company = params.company;
-        defer = $q.defer();
-        company.$get('schedules').then(function(collection) {
-          return collection.$get('schedules').then(function(schedules) {
-            var models, s;
-            models = (function() {
-              var i, len, results;
-              results = [];
-              for (i = 0, len = schedules.length; i < len; i++) {
-                s = schedules[i];
-                results.push(new BBModel.Admin.Schedule(s));
-              }
-              return results;
-            })();
-            return defer.resolve(models);
-          }, function(err) {
-            return defer.reject(err);
-          });
-        }, function(err) {
-          return defer.reject(err);
+        return AdminScheduleService.query(params).then(function(schedules) {
+          return $scope.schedules = schedules;
         });
-        return defer.promise;
-      },
-      "delete": function(schedule) {
-        var deferred;
-        deferred = $q.defer();
-        schedule.$del('self').then((function(_this) {
-          return function(schedule) {
-            schedule = new BBModel.Admin.Schedule(schedule);
-            return deferred.resolve(schedule);
-          };
-        })(this), (function(_this) {
-          return function(err) {
-            return deferred.reject(err);
-          };
-        })(this));
-        return deferred.promise;
-      },
-      update: function(schedule) {
-        var deferred;
-        deferred = $q.defer();
-        return schedule.$put('self', {}, schedule.getPostData()).then((function(_this) {
-          return function(c) {
-            schedule = new BBModel.Admin.Schedule(c);
-            return deferred.resolve(schedule);
-          };
-        })(this), (function(_this) {
-          return function(err) {
-            return deferred.reject(err);
-          };
-        })(this));
-      }
-    };
-  });
-
-}).call(this);
-
-(function() {
-  angular.module('BBAdmin.Services').factory('AdminServiceService', function($q, BBModel, $log) {
-    return {
-      query: function(params) {
-        var company, defer;
-        company = params.company;
-        defer = $q.defer();
-        company.$get('services').then(function(collection) {
-          return collection.$get('services').then(function(services) {
-            var models, s;
-            models = (function() {
-              var i, len, results;
-              results = [];
-              for (i = 0, len = services.length; i < len; i++) {
-                s = services[i];
-                results.push(new BBModel.Admin.Service(s));
-              }
-              return results;
-            })();
-            return defer.resolve(models);
-          }, function(err) {
-            return defer.reject(err);
-          });
-        }, function(err) {
-          return defer.reject(err);
+      };
+      $scope.newSchedule = function() {
+        return ModalForm["new"]({
+          company: $scope.company,
+          title: 'New Schedule',
+          new_rel: 'new_schedule',
+          post_rel: 'schedules',
+          size: 'lg',
+          success: function(schedule) {
+            return $scope.schedules.push(schedule);
+          }
         });
-        return defer.promise;
+      };
+      $scope["delete"] = function(schedule) {
+        return schedule.$del('self').then(function() {
+          return $scope.schedules = _.reject($scope.schedules, schedule);
+        }, function(err) {
+          return $log.error("Failed to delete schedule");
+        });
+      };
+      return $scope.edit = function(schedule) {
+        return ModalForm.edit({
+          model: schedule,
+          title: 'Edit Schedule',
+          size: 'lg'
+        });
+      };
+    };
+    link = function(scope, element, attrs) {
+      if (scope.company) {
+        return scope.getSchedules();
+      } else {
+        return AdminCompanyService.query(attrs).then(function(company) {
+          scope.company = company;
+          return scope.getSchedules();
+        });
+      }
+    };
+    return {
+      controller: controller,
+      link: link,
+      templateUrl: 'schedule_table_main.html'
+    };
+  });
+
+}).call(this);
+
+(function() {
+  angular.module('BBAdminServices').directive('scheduleWeekdays', function(uiCalendarConfig, ScheduleRules) {
+    var controller, link;
+    controller = function($scope, $attrs) {
+      var options;
+      $scope.calendarName = 'scheduleWeekdays';
+      $scope.eventSources = [
+        {
+          events: function(start, end, timezone, callback) {
+            return callback($scope.getEvents());
+          }
+        }
+      ];
+      $scope.getCalendarEvents = function(start, end) {
+        var events;
+        return events = uiCalendarConfig.calendars.scheduleWeekdays.fullCalendar('clientEvents', function(e) {
+          return (start.isAfter(e.start) || start.isSame(e.start)) && (end.isBefore(e.end) || end.isSame(e.end));
+        });
+      };
+      options = $scope.$eval($attrs.scheduleWeekdays) || {};
+      $scope.options = {
+        calendar: {
+          editable: false,
+          selectable: true,
+          defaultView: 'agendaSelectAcrossWeek',
+          header: {
+            left: '',
+            center: 'title',
+            right: ''
+          },
+          selectHelper: false,
+          eventOverlap: false,
+          views: {
+            agendaSelectAcrossWeek: {
+              duration: {
+                weeks: 1
+              },
+              titleFormat: '[]',
+              allDaySlot: false,
+              columnFormat: 'ddd',
+              slotEventOverlap: false,
+              minTime: options.min_time || '00:00:00',
+              maxTime: options.max_time || '24:00:00'
+            }
+          },
+          select: function(start, end, jsEvent, view) {
+            var events;
+            events = $scope.getCalendarEvents(start, end);
+            if (events.length > 0) {
+              return $scope.removeRange(start, end);
+            } else {
+              return $scope.addRange(start, end);
+            }
+          },
+          eventResizeStop: function(event, jsEvent, ui, view) {
+            return $scope.addRange(event.start, event.end);
+          },
+          eventDrop: function(event, delta, revertFunc, jsEvent, ui, view) {
+            var orig;
+            if (event.start.hasTime()) {
+              orig = {
+                start: moment(event.start).subtract(delta),
+                end: moment(event.end).subtract(delta)
+              };
+              $scope.removeRange(orig.start, orig.end);
+              return $scope.addRange(event.start, event.end);
+            }
+          },
+          eventClick: function(event, jsEvent, view) {
+            return $scope.removeRange(event.start, event.end);
+          }
+        }
+      };
+      return $scope.render = function() {
+        return uiCalendarConfig.calendars.scheduleWeekdays.fullCalendar('render');
+      };
+    };
+    link = function(scope, element, attrs, ngModel) {
+      var scheduleRules;
+      scheduleRules = function() {
+        return new ScheduleRules(ngModel.$viewValue);
+      };
+      scope.getEvents = function() {
+        return scheduleRules().toWeekdayEvents();
+      };
+      scope.addRange = function(start, end) {
+        ngModel.$setViewValue(scheduleRules().addWeekdayRange(start, end));
+        return ngModel.$render();
+      };
+      scope.removeRange = function(start, end) {
+        ngModel.$setViewValue(scheduleRules().removeWeekdayRange(start, end));
+        return ngModel.$render();
+      };
+      return ngModel.$render = function() {
+        if (uiCalendarConfig && uiCalendarConfig.calendars.scheduleWeekdays) {
+          uiCalendarConfig.calendars.scheduleWeekdays.fullCalendar('refetchEvents');
+          return uiCalendarConfig.calendars.scheduleWeekdays.fullCalendar('unselect');
+        }
+      };
+    };
+    return {
+      controller: controller,
+      link: link,
+      templateUrl: 'schedule_cal_main.html',
+      require: 'ngModel',
+      scope: {
+        render: '=?'
       }
     };
   });
@@ -2147,113 +2202,58 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
 }).call(this);
 
 (function() {
-  angular.module('BBAdminServices').factory("BB.Service.schedule", function($q, BBModel) {
-    return {
-      unwrap: function(resource) {
-        return new BBModel.Admin.Schedule(resource);
+  angular.module('BBAdminServices').directive('serviceTable', function(AdminCompanyService, AdminServiceService, $modal, $log, ModalForm) {
+    var controller, link;
+    controller = function($scope) {
+      $scope.fields = ['id', 'name'];
+      $scope.getServices = function() {
+        var params;
+        params = {
+          company: $scope.company
+        };
+        return AdminServiceService.query(params).then(function(services) {
+          return $scope.services = services;
+        });
+      };
+      $scope.newService = function() {
+        return ModalForm["new"]({
+          company: $scope.company,
+          title: 'New Service',
+          new_rel: 'new_service',
+          post_rel: 'services',
+          success: function(service) {
+            return $scope.services.push(service);
+          }
+        });
+      };
+      $scope["delete"] = function(service) {
+        return service.$del('self').then(function() {
+          return $scope.services = _.reject($scope.services, service);
+        }, function(err) {
+          return $log.error("Failed to delete service");
+        });
+      };
+      return $scope.edit = function(service) {
+        return ModalForm.edit({
+          model: service,
+          title: 'Edit Service'
+        });
+      };
+    };
+    link = function(scope, element, attrs) {
+      if (scope.company) {
+        return scope.getServices();
+      } else {
+        return AdminCompanyService.query(attrs).then(function(company) {
+          scope.company = company;
+          return scope.getServices();
+        });
       }
     };
-  });
-
-  angular.module('BBAdminServices').factory("BB.Service.person", function($q, BBModel) {
     return {
-      unwrap: function(resource) {
-        return new BBModel.Admin.Person(resource);
-      }
-    };
-  });
-
-  angular.module('BBAdminServices').factory("BB.Service.people", function($q, BBModel) {
-    return {
-      promise: true,
-      unwrap: function(resource) {
-        var deferred;
-        deferred = $q.defer();
-        resource.$get('people').then((function(_this) {
-          return function(items) {
-            var i, j, len, models;
-            models = [];
-            for (j = 0, len = items.length; j < len; j++) {
-              i = items[j];
-              models.push(new BBModel.Admin.Person(i));
-            }
-            return deferred.resolve(models);
-          };
-        })(this), (function(_this) {
-          return function(err) {
-            return deferred.reject(err);
-          };
-        })(this));
-        return deferred.promise;
-      }
-    };
-  });
-
-  angular.module('BBAdminServices').factory("BB.Service.resource", function($q, BBModel) {
-    return {
-      unwrap: function(resource) {
-        return new BBModel.Admin.Resource(resource);
-      }
-    };
-  });
-
-  angular.module('BBAdminServices').factory("BB.Service.resources", function($q, BBModel) {
-    return {
-      promise: true,
-      unwrap: function(resource) {
-        var deferred;
-        deferred = $q.defer();
-        resource.$get('resources').then((function(_this) {
-          return function(items) {
-            var i, j, len, models;
-            models = [];
-            for (j = 0, len = items.length; j < len; j++) {
-              i = items[j];
-              models.push(new BBModel.Admin.Resource(i));
-            }
-            return deferred.resolve(models);
-          };
-        })(this), (function(_this) {
-          return function(err) {
-            return deferred.reject(err);
-          };
-        })(this));
-        return deferred.promise;
-      }
-    };
-  });
-
-  angular.module('BBAdminServices').factory("BB.Service.service", function($q, BBModel) {
-    return {
-      unwrap: function(resource) {
-        return new BBModel.Admin.Service(resource);
-      }
-    };
-  });
-
-  angular.module('BBAdminServices').factory("BB.Service.services", function($q, BBModel) {
-    return {
-      promise: true,
-      unwrap: function(resource) {
-        var deferred;
-        deferred = $q.defer();
-        resource.$get('services').then((function(_this) {
-          return function(items) {
-            var i, j, len, models;
-            models = [];
-            for (j = 0, len = items.length; j < len; j++) {
-              i = items[j];
-              models.push(new BBModel.Admin.Service(i));
-            }
-            return deferred.resolve(models);
-          };
-        })(this), (function(_this) {
-          return function(err) {
-            return deferred.reject(err);
-          };
-        })(this));
-        return deferred.promise;
-      }
+      controller: controller,
+      link: link,
+      templateUrl: 'service_table_main.html'
     };
   });
 
