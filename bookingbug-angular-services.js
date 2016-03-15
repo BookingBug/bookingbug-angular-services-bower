@@ -83,11 +83,11 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
 
 
 (function() {
-  var __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    __hasProp = {}.hasOwnProperty;
+  var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp = {}.hasOwnProperty;
 
-  window.Collection.Clinic = (function(_super) {
-    __extends(Clinic, _super);
+  window.Collection.Clinic = (function(superClass) {
+    extend(Clinic, superClass);
 
     function Clinic() {
       return Clinic.__super__.constructor.apply(this, arguments);
@@ -654,8 +654,8 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
   * @property {string} postcode The Postcode/Zipcode
   * @property {string} country The country
    */
-  var __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    __hasProp = {}.hasOwnProperty;
+  var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp = {}.hasOwnProperty;
 
   angular.module('BB.Models').factory("Admin.AddressModel", function($q, BBModel, BaseModel, AddressModel) {
 
@@ -671,17 +671,17 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
     * @returns {array} Returns an array of address
      */
     var Admin_Address;
-    return Admin_Address = (function(_super) {
-      __extends(Admin_Address, _super);
+    return Admin_Address = (function(superClass) {
+      extend(Admin_Address, superClass);
 
       function Admin_Address() {
         return Admin_Address.__super__.constructor.apply(this, arguments);
       }
 
       Admin_Address.prototype.distanceFrom = function(address, options) {
-        var _base;
+        var base;
         this.dists || (this.dists = []);
-        (_base = this.dists)[address] || (_base[address] = Math.round(Math.random() * 50, 0));
+        (base = this.dists)[address] || (base[address] = Math.round(Math.random() * 50, 0));
         return this.dists[address];
       };
 
@@ -716,19 +716,19 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
   * @property {string} start_time The clinic start thime
   * @property {string} end_time The clinic end time
    */
-  var __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    __hasProp = {}.hasOwnProperty;
+  var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp = {}.hasOwnProperty;
 
   angular.module('BB.Models').factory("Admin.ClinicModel", function($q, BBModel, BaseModel, ClinicModel) {
     var Admin_Clinic;
-    return Admin_Clinic = (function(_super) {
-      __extends(Admin_Clinic, _super);
+    return Admin_Clinic = (function(superClass) {
+      extend(Admin_Clinic, superClass);
 
       function Admin_Clinic(data) {
-        var _base;
+        var base;
         Admin_Clinic.__super__.constructor.call(this, data);
         this.repeat_rule || (this.repeat_rule = {});
-        (_base = this.repeat_rule).rules || (_base.rules = {});
+        (base = this.repeat_rule).rules || (base.rules = {});
       }
 
 
@@ -743,32 +743,32 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
        */
 
       Admin_Clinic.prototype.calcRepeatRule = function() {
-        var en, id, vals, _ref, _ref1, _ref2;
+        var en, id, ref, ref1, ref2, vals;
         vals = {};
         vals.name = this.name;
         vals.start_time = this.start_time.format("HH:mm");
         vals.end_time = this.end_time.format("HH:mm");
         vals.address_id = this.address_id;
         vals.resource_ids = [];
-        _ref = this.resources;
-        for (id in _ref) {
-          en = _ref[id];
+        ref = this.resources;
+        for (id in ref) {
+          en = ref[id];
           if (en) {
             vals.resource_ids.push(id);
           }
         }
         vals.person_ids = [];
-        _ref1 = this.people;
-        for (id in _ref1) {
-          en = _ref1[id];
+        ref1 = this.people;
+        for (id in ref1) {
+          en = ref1[id];
           if (en) {
             vals.person_ids.push(id);
           }
         }
         vals.service_ids = [];
-        _ref2 = this.services;
-        for (id in _ref2) {
-          en = _ref2[id];
+        ref2 = this.services;
+        for (id in ref2) {
+          en = ref2[id];
           if (en) {
             vals.service_ids.push(id);
           }
@@ -789,7 +789,7 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
        */
 
       Admin_Clinic.prototype.getPostData = function() {
-        var data, en, id, _ref, _ref1, _ref2;
+        var data, en, id, ref, ref1, ref2;
         data = {};
         data.name = this.name;
         data.repeat_rule = this.repeat_rule;
@@ -797,25 +797,25 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
         data.end_time = this.end_time;
         data.resource_ids = [];
         data.update_for_repeat = this.update_for_repeat;
-        _ref = this.resources;
-        for (id in _ref) {
-          en = _ref[id];
+        ref = this.resources;
+        for (id in ref) {
+          en = ref[id];
           if (en) {
             data.resource_ids.push(id);
           }
         }
         data.person_ids = [];
-        _ref1 = this.people;
-        for (id in _ref1) {
-          en = _ref1[id];
+        ref1 = this.people;
+        for (id in ref1) {
+          en = ref1[id];
           if (en) {
             data.person_ids.push(id);
           }
         }
         data.service_ids = [];
-        _ref2 = this.services;
-        for (id in _ref2) {
-          en = _ref2[id];
+        ref2 = this.services;
+        for (id in ref2) {
+          en = ref2[id];
           if (en) {
             data.service_ids.push(id);
           }
@@ -900,13 +900,13 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
   * @property {boolean} disabled Verify if person is disabled or not
   * @property {integer} order The person order
    */
-  var __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    __hasProp = {}.hasOwnProperty;
+  var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp = {}.hasOwnProperty;
 
   angular.module('BB.Models').factory("Admin.PersonModel", function($q, BBModel, BaseModel, PersonModel, AdminPersonService) {
     var Admin_Person;
-    return Admin_Person = (function(_super) {
-      __extends(Admin_Person, _super);
+    return Admin_Person = (function(superClass) {
+      extend(Admin_Person, superClass);
 
       function Admin_Person(data) {
         Admin_Person.__super__.constructor.call(this, data);
@@ -1108,13 +1108,13 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
               return collection.$get('queuers').then(function(queuers) {
                 var models, q;
                 models = (function() {
-                  var _i, _len, _results;
-                  _results = [];
-                  for (_i = 0, _len = queuers.length; _i < _len; _i++) {
-                    q = queuers[_i];
-                    _results.push(new BBModel.Admin.Queuer(q));
+                  var i, len, results;
+                  results = [];
+                  for (i = 0, len = queuers.length; i < len; i++) {
+                    q = queuers[i];
+                    results.push(new BBModel.Admin.Queuer(q));
                   }
-                  return _results;
+                  return results;
                 })();
                 _this.queuers = models;
                 return defer.resolve(models);
@@ -1232,13 +1232,13 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
   * @property {boolean} deleted Verify if resources is deleted or not
   * @property {boolean} disabled Verify if resources is disabled or not
    */
-  var __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    __hasProp = {}.hasOwnProperty;
+  var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp = {}.hasOwnProperty;
 
   angular.module('BB.Models').factory("Admin.ResourceModel", function($q, BBModel, BaseModel, ResourceModel) {
     var Admin_Resource;
-    return Admin_Resource = (function(_super) {
-      __extends(Admin_Resource, _super);
+    return Admin_Resource = (function(superClass) {
+      extend(Admin_Resource, superClass);
 
       function Admin_Resource() {
         return Admin_Resource.__super__.constructor.apply(this, arguments);
@@ -1306,13 +1306,13 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
   * @property {integer} company_id The company id
   * @property {date} duration The schedule duration
    */
-  var __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    __hasProp = {}.hasOwnProperty;
+  var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp = {}.hasOwnProperty;
 
   angular.module('BB.Models').factory("Admin.ScheduleModel", function($q, BBModel, BaseModel) {
     var Admin_Schedule;
-    return Admin_Schedule = (function(_super) {
-      __extends(Admin_Schedule, _super);
+    return Admin_Schedule = (function(superClass) {
+      extend(Admin_Schedule, superClass);
 
       function Admin_Schedule(data) {
         Admin_Schedule.__super__.constructor.call(this, data);
@@ -1359,7 +1359,7 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
   *
   * @property {object} rules The schedule rules
    */
-  var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
+  var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   angular.module('BB.Models').factory("ScheduleRules", function() {
     var ScheduleRules;
@@ -1368,8 +1368,8 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
         if (rules == null) {
           rules = {};
         }
-        this.removeRangeFromDate = __bind(this.removeRangeFromDate, this);
-        this.addRangeToDate = __bind(this.addRangeToDate, this);
+        this.removeRangeFromDate = bind(this.removeRangeFromDate, this);
+        this.addRangeToDate = bind(this.addRangeToDate, this);
         this.rules = rules;
       }
 
@@ -1498,7 +1498,7 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
        */
 
       ScheduleRules.prototype.applyFunctionToDateRange = function(start, end, format, func) {
-        var date, days, end_time, range, _i, _results;
+        var date, days, end_time, j, range, results;
         days = this.diffInDays(start, end);
         if (days === 0) {
           date = start.format(format);
@@ -1508,9 +1508,9 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
           end_time = moment(start).endOf('day');
           this.applyFunctionToDateRange(start, end_time, format, func);
           _.each((function() {
-            _results = [];
-            for (var _i = 1; 1 <= days ? _i <= days : _i >= days; 1 <= days ? _i++ : _i--){ _results.push(_i); }
-            return _results;
+            results = [];
+            for (var j = 1; 1 <= days ? j <= days : j >= days; 1 <= days ? j++ : j--){ results.push(j); }
+            return results;
           }).apply(this), (function(_this) {
             return function(i) {
               var start_time;
@@ -1765,13 +1765,13 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
   * @property {integer} min_bookings The minimum number of bookings
   * @property {integer} max_booings The maximum number of bookings
    */
-  var __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    __hasProp = {}.hasOwnProperty;
+  var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp = {}.hasOwnProperty;
 
   angular.module('BB.Models').factory("Admin.ServiceModel", function($q, BBModel, ServiceModel) {
     var Admin_Service;
-    return Admin_Service = (function(_super) {
-      __extends(Admin_Service, _super);
+    return Admin_Service = (function(superClass) {
+      extend(Admin_Service, superClass);
 
       function Admin_Service() {
         return Admin_Service.__super__.constructor.apply(this, arguments);
@@ -1795,13 +1795,13 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
           return collection.$get('addresses').then(function(addresss) {
             var models, s;
             models = (function() {
-              var _i, _len, _results;
-              _results = [];
-              for (_i = 0, _len = addresss.length; _i < _len; _i++) {
-                s = addresss[_i];
-                _results.push(new BBModel.Admin.Address(s));
+              var i, len, results;
+              results = [];
+              for (i = 0, len = addresss.length; i < len; i++) {
+                s = addresss[i];
+                results.push(new BBModel.Admin.Address(s));
               }
-              return _results;
+              return results;
             })();
             return defer.resolve(models);
           }, function(err) {
@@ -1846,13 +1846,13 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
               return collection.$get('clinics').then(function(clinics) {
                 var models, s;
                 models = (function() {
-                  var _i, _len, _results;
-                  _results = [];
-                  for (_i = 0, _len = clinics.length; _i < _len; _i++) {
-                    s = clinics[_i];
-                    _results.push(new BBModel.Admin.Clinic(s));
+                  var i, len, results;
+                  results = [];
+                  for (i = 0, len = clinics.length; i < len; i++) {
+                    s = clinics[i];
+                    results.push(new BBModel.Admin.Clinic(s));
                   }
-                  return _results;
+                  return results;
                 })();
                 clinics = new $window.Collection.Clinic(collection, models, params);
                 ClinicCollections.add(clinics);
@@ -1933,13 +1933,13 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
             return collection.$get('people').then(function(people) {
               var models, p;
               models = (function() {
-                var _i, _len, _results;
-                _results = [];
-                for (_i = 0, _len = people.length; _i < _len; _i++) {
-                  p = people[_i];
-                  _results.push(new BBModel.Admin.Person(p));
+                var i, len, results;
+                results = [];
+                for (i = 0, len = people.length; i < len; i++) {
+                  p = people[i];
+                  results.push(new BBModel.Admin.Person(p));
                 }
-                return _results;
+                return results;
               })();
               return defer.resolve(models);
             }, function(err) {
@@ -2007,13 +2007,13 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
           return collection.$get('resources').then(function(resources) {
             var models, r;
             models = (function() {
-              var _i, _len, _results;
-              _results = [];
-              for (_i = 0, _len = resources.length; _i < _len; _i++) {
-                r = resources[_i];
-                _results.push(new BBModel.Admin.Resource(r));
+              var i, len, results;
+              results = [];
+              for (i = 0, len = resources.length; i < len; i++) {
+                r = resources[i];
+                results.push(new BBModel.Admin.Resource(r));
               }
-              return _results;
+              return results;
             })();
             return defer.resolve(models);
           }, function(err) {
@@ -2062,13 +2062,13 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
           return collection.$get('schedules').then(function(schedules) {
             var models, s;
             models = (function() {
-              var _i, _len, _results;
-              _results = [];
-              for (_i = 0, _len = schedules.length; _i < _len; _i++) {
-                s = schedules[_i];
-                _results.push(new BBModel.Admin.Schedule(s));
+              var i, len, results;
+              results = [];
+              for (i = 0, len = schedules.length; i < len; i++) {
+                s = schedules[i];
+                results.push(new BBModel.Admin.Schedule(s));
               }
-              return _results;
+              return results;
             })();
             return defer.resolve(models);
           }, function(err) {
@@ -2124,13 +2124,13 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
           return collection.$get('services').then(function(services) {
             var models, s;
             models = (function() {
-              var _i, _len, _results;
-              _results = [];
-              for (_i = 0, _len = services.length; _i < _len; _i++) {
-                s = services[_i];
-                _results.push(new BBModel.Admin.Service(s));
+              var i, len, results;
+              results = [];
+              for (i = 0, len = services.length; i < len; i++) {
+                s = services[i];
+                results.push(new BBModel.Admin.Service(s));
               }
-              return _results;
+              return results;
             })();
             return defer.resolve(models);
           }, function(err) {
@@ -2171,10 +2171,10 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
         deferred = $q.defer();
         resource.$get('people').then((function(_this) {
           return function(items) {
-            var i, models, _i, _len;
+            var i, j, len, models;
             models = [];
-            for (_i = 0, _len = items.length; _i < _len; _i++) {
-              i = items[_i];
+            for (j = 0, len = items.length; j < len; j++) {
+              i = items[j];
               models.push(new BBModel.Admin.Person(i));
             }
             return deferred.resolve(models);
@@ -2205,10 +2205,10 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
         deferred = $q.defer();
         resource.$get('resources').then((function(_this) {
           return function(items) {
-            var i, models, _i, _len;
+            var i, j, len, models;
             models = [];
-            for (_i = 0, _len = items.length; _i < _len; _i++) {
-              i = items[_i];
+            for (j = 0, len = items.length; j < len; j++) {
+              i = items[j];
               models.push(new BBModel.Admin.Resource(i));
             }
             return deferred.resolve(models);
@@ -2239,10 +2239,10 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
         deferred = $q.defer();
         resource.$get('services').then((function(_this) {
           return function(items) {
-            var i, models, _i, _len;
+            var i, j, len, models;
             models = [];
-            for (_i = 0, _len = items.length; _i < _len; _i++) {
-              i = items[_i];
+            for (j = 0, len = items.length; j < len; j++) {
+              i = items[j];
               models.push(new BBModel.Admin.Service(i));
             }
             return deferred.resolve(models);
