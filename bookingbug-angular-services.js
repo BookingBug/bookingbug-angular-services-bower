@@ -83,63 +83,6 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
 
 
 (function() {
-  var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
-
-  window.Collection.Clinic = (function(superClass) {
-    extend(Clinic, superClass);
-
-    function Clinic() {
-      return Clinic.__super__.constructor.apply(this, arguments);
-    }
-
-    Clinic.prototype.checkItem = function(item) {
-      return Clinic.__super__.checkItem.apply(this, arguments);
-    };
-
-    Clinic.prototype.matchesParams = function(item) {
-      if (this.params.start_time) {
-        this.start_time || (this.start_time = moment(this.params.start_time));
-        if (this.start_time.isAfter(item.start_time)) {
-          return false;
-        }
-      }
-      if (this.params.end_time) {
-        this.end_time || (this.end_time = moment(this.params.end_time));
-        if (this.end_time.isBefore(item.end_time)) {
-          return false;
-        }
-      }
-      if (this.params.start_date) {
-        this.start_date || (this.start_date = moment(this.params.start_date));
-        if (this.start_date.isAfter(item.start_date)) {
-          return false;
-        }
-      }
-      if (this.params.end_date) {
-        this.end_date || (this.end_date = moment(this.params.end_date));
-        if (this.end_date.isBefore(item.end_date)) {
-          return false;
-        }
-      }
-      return true;
-    };
-
-    return Clinic;
-
-  })(window.Collection.Base);
-
-  angular.module('BBAdmin.Services').provider("ClinicCollections", function() {
-    return {
-      $get: function() {
-        return new window.BaseCollections();
-      }
-    };
-  });
-
-}).call(this);
-
-(function() {
   angular.module('BBAdminServices').directive('personTable', function(AdminCompanyService, AdminPerson, $log, ModalForm) {
     var controller, link;
     controller = function($scope) {
@@ -631,6 +574,63 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
       controller: controller,
       link: link,
       templateUrl: 'service_table_main.html'
+    };
+  });
+
+}).call(this);
+
+(function() {
+  var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp = {}.hasOwnProperty;
+
+  window.Collection.Clinic = (function(superClass) {
+    extend(Clinic, superClass);
+
+    function Clinic() {
+      return Clinic.__super__.constructor.apply(this, arguments);
+    }
+
+    Clinic.prototype.checkItem = function(item) {
+      return Clinic.__super__.checkItem.apply(this, arguments);
+    };
+
+    Clinic.prototype.matchesParams = function(item) {
+      if (this.params.start_time) {
+        this.start_time || (this.start_time = moment(this.params.start_time));
+        if (this.start_time.isAfter(item.start_time)) {
+          return false;
+        }
+      }
+      if (this.params.end_time) {
+        this.end_time || (this.end_time = moment(this.params.end_time));
+        if (this.end_time.isBefore(item.end_time)) {
+          return false;
+        }
+      }
+      if (this.params.start_date) {
+        this.start_date || (this.start_date = moment(this.params.start_date));
+        if (this.start_date.isAfter(item.start_date)) {
+          return false;
+        }
+      }
+      if (this.params.end_date) {
+        this.end_date || (this.end_date = moment(this.params.end_date));
+        if (this.end_date.isBefore(item.end_date)) {
+          return false;
+        }
+      }
+      return true;
+    };
+
+    return Clinic;
+
+  })(window.Collection.Base);
+
+  angular.module('BBAdmin.Services').provider("ClinicCollections", function() {
+    return {
+      $get: function() {
+        return new window.BaseCollections();
+      }
     };
   });
 
@@ -1309,7 +1309,7 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
   var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
-  angular.module('BB.Models').factory("Admin.ScheduleModel", function($q, BBModel, BaseModel, ScheduleRules) {
+  angular.module('BB.Models').factory("Admin.ScheduleModel", function($q, BBModel, BaseModel) {
     var Admin_Schedule;
     return Admin_Schedule = (function(superClass) {
       extend(Admin_Schedule, superClass);
@@ -1456,7 +1456,7 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
 
       ScheduleRules.prototype.addRangeToDate = function(date, range) {
         var ranges;
-        ranges = this.rules[date] ? this.rules[date] : [];
+        ranges = this.rules[date] ? this.rules[date].split(',') : [];
         return this.rules[date] = this.joinRanges(this.insertRange(ranges, range));
       };
 
@@ -1475,7 +1475,7 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
 
       ScheduleRules.prototype.removeRangeFromDate = function(date, range) {
         var ranges;
-        ranges = this.rules[date] ? this.rules[date] : [];
+        ranges = this.rules[date] ? this.rules[date].split(',') : [];
         this.rules[date] = this.joinRanges(this.subtractRange(ranges, range));
         if (this.rules[date] === '') {
           return delete this.rules[date];
@@ -1686,12 +1686,12 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
       * @description
       * Go to events day
       *
-      * @returns {array} Returns fullcalendar compatible events
+      * @returns {array} Returns the event start and end time
        */
 
       ScheduleRules.prototype.toEvents = function(d) {
         if (d) {
-          return _.map(this.rules[d], (function(_this) {
+          return _.map(this.rules[d].split(','), (function(_this) {
             return function(range) {
               return {
                 start: [d, _this.formatTime(range.split('-')[0])].join('T'),
@@ -1702,7 +1702,7 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
         } else {
           return _.reduce(this.filterRulesByDates(), (function(_this) {
             return function(memo, ranges, date) {
-              return memo.concat(_.map(ranges, function(range) {
+              return memo.concat(_.map(ranges.split(','), function(range) {
                 return {
                   start: [date, _this.formatTime(range.split('-')[0])].join('T'),
                   end: [date, _this.formatTime(range.split('-')[1])].join('T')
@@ -1721,7 +1721,7 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
       * @description
       * Go to events week day
       *
-      * @returns {array} Returns fullcalendar compatible events
+      * @returns {array} Returns the event of week day
        */
 
       ScheduleRules.prototype.toWeekdayEvents = function() {
@@ -1729,7 +1729,7 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
           return function(memo, ranges, day) {
             var date;
             date = moment().set('day', day).format('YYYY-MM-DD');
-            return memo.concat(_.map(ranges, function(range) {
+            return memo.concat(_.map(ranges.split(','), function(range) {
               return {
                 start: [date, _this.formatTime(range.split('-')[0])].join('T'),
                 end: [date, _this.formatTime(range.split('-')[1])].join('T')
@@ -2052,7 +2052,7 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
 }).call(this);
 
 (function() {
-  angular.module('BBAdmin.Services').factory('AdminScheduleService', function($q, BBModel, ScheduleRules) {
+  angular.module('BBAdmin.Services').factory('AdminScheduleService', function($q, BBModel) {
     return {
       query: function(params) {
         var company, defer;
@@ -2105,35 +2105,6 @@ $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
         })(this), (function(_this) {
           return function(err) {
             return deferred.reject(err);
-          };
-        })(this));
-      },
-      mapPeopleToScheduleEvents: function(start, end, people) {
-        return _.map(people, function(p) {
-          var params;
-          params = {
-            start_date: start.format('YYYY-MM-DD'),
-            end_date: end.format('YYYY-MM-DD')
-          };
-          return p.$get('schedule', params).then(function(schedules) {
-            var events, rules;
-            rules = new ScheduleRules(schedules.dates);
-            events = rules.toEvents();
-            _.each(events, function(e) {
-              e.resourceId = p.id;
-              e.title = p.name;
-              return e.rendering = "background";
-            });
-            return events;
-          });
-        });
-      },
-      getPeopleScheduleEvents: function(company, start, end) {
-        return company.getPeoplePromise().then((function(_this) {
-          return function(people) {
-            return $q.all(_this.mapPeopleToScheduleEvents(start, end, people)).then(function(schedules) {
-              return _.flatten(schedules);
-            });
           };
         })(this));
       }
