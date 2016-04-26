@@ -10,77 +10,134 @@
 
 }).call(this);
 
-// $.fullCalendar.Grid.prototype.setElement = function(el) {
-//   var noEventClick = this.view.opt('noEventClick');
-//   var _this = this;
+$.fullCalendar.Grid.prototype.setElement = function(el) {
+  var noEventClick = this.view.opt('noEventClick');
+  var _this = this;
 
-//   this.el = el
+  this.el = el
 
-//   // attach a handler to the grid's root element.
-//   this.el.on('mousedown', function(ev) {
-//     if (
-//       (!$(ev.target).is('.fc-event-container *, .fc-more') || noEventClick) && // not an an event element, or "more.." link
-//       !$(ev.target).closest('.fc-popover').length // not on a popover (like the "more.." events one)
-//     ) {
-//       _this.dayMousedown(ev);
-//     }
-//   });
+  // attach a handler to the grid's root element.
+  this.el.on('mousedown', function(ev) {
+    if (
+      (!$(ev.target).is('.fc-event-container *, .fc-more') || noEventClick) && // not an an event element, or "more.." link
+      !$(ev.target).closest('.fc-popover').length // not on a popover (like the "more.." events one)
+    ) {
+      _this.dayMousedown(ev);
+    }
+  });
 
-//   // attach event-element-related handlers. in Grid.events
-//   // same garbage collection note as above.
-//   this.bindSegHandlers();
+  // attach event-element-related handlers. in Grid.events
+  // same garbage collection note as above.
+  this.bindSegHandlers();
 
-//   this.bindGlobalHandlers();
+  this.bindGlobalHandlers();
 
-// }
+}
 
 
-// var FC = $.fullCalendar;
-// var agendaSelectAcrossWeek
-// agendaSelectAcrossWeek = FC.views.agenda['class'].extend({
+var FC = $.fullCalendar;
+var agendaSelectAcrossWeek
+agendaSelectAcrossWeek = FC.views.agenda['class'].extend({
 
-//   initialize: function() {
-//     FC.views.agenda['class'].prototype.initialize.apply(this);
-//     this.timeGrid.renderSelection = this.renderSelection;
-//   },
+  initialize: function() {
+    FC.views.agenda['class'].prototype.initialize.apply(this);
+    this.timeGrid.renderSelection = this.renderSelection;
+  },
 
-//   splitRange: function(range) {
-//     var start = range.start;
-//     var end = range.end;
-//     days = moment.duration(end.diff(start)).days()
-//     return _.map(_.range(days + 1), function(i) {
-//       day = moment(start).add(i, 'days');
-//       return {
-//         start: day.set({'hour': start.hour(), 'minute': start.minute()}),
-//         end: moment(day).set({'hour': end.hour(), 'minute': end.minute()})
-//       };
-//     })
-//   },
+  splitRange: function(range) {
+    var start = range.start;
+    var end = range.end;
+    days = moment.duration(end.diff(start)).days()
+    return _.map(_.range(days + 1), function(i) {
+      day = moment(start).add(i, 'days');
+      return {
+        start: day.set({'hour': start.hour(), 'minute': start.minute()}),
+        end: moment(day).set({'hour': end.hour(), 'minute': end.minute()})
+      };
+    })
+  },
 
-//   reportSelection: function(range, ev) {
-//     _.each(this.splitRange(range), function(r) {
-//       FC.views.agenda['class'].prototype.reportSelection.apply(this, [r, ev])
-//     }, this);
-//   },
+  reportSelection: function(range, ev) {
+    _.each(this.splitRange(range), function(r) {
+      FC.views.agenda['class'].prototype.reportSelection.apply(this, [r, ev])
+    }, this);
+  },
 
-//   renderSelection: function(range) {
-//     var ranges = this.view.splitRange(range);
-//     if (this.view.opt('selectHelper')) {
-//       _.each(ranges, this.renderRangeHelper, this);
-//     }
-//     else {
-//       segs = _.reduce(ranges, function(s, r) {
-//         return s.concat(this.rangeToSegs(r))
-//       }, [], this);
-//       this.renderFill('highlight', segs);
-//       this.view.trigger('selectx', null, range.start, range.end, null);
-//     }
-//   }
+  renderSelection: function(range) {
+    var ranges = this.view.splitRange(range);
+    if (this.view.opt('selectHelper')) {
+      _.each(ranges, this.renderRangeHelper, this);
+    }
+    else {
+      segs = _.reduce(ranges, function(s, r) {
+        return s.concat(this.rangeToSegs(r))
+      }, [], this);
+      this.renderFill('highlight', segs);
+      this.view.trigger('selectx', null, range.start, range.end, null);
+    }
+  }
 
-// });
+});
 
-// $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
+$.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
 
+
+(function() {
+  var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    hasProp = {}.hasOwnProperty;
+
+  window.Collection.Clinic = (function(superClass) {
+    extend(Clinic, superClass);
+
+    function Clinic() {
+      return Clinic.__super__.constructor.apply(this, arguments);
+    }
+
+    Clinic.prototype.checkItem = function(item) {
+      return Clinic.__super__.checkItem.apply(this, arguments);
+    };
+
+    Clinic.prototype.matchesParams = function(item) {
+      if (this.params.start_time) {
+        this.start_time || (this.start_time = moment(this.params.start_time));
+        if (this.start_time.isAfter(item.start_time)) {
+          return false;
+        }
+      }
+      if (this.params.end_time) {
+        this.end_time || (this.end_time = moment(this.params.end_time));
+        if (this.end_time.isBefore(item.end_time)) {
+          return false;
+        }
+      }
+      if (this.params.start_date) {
+        this.start_date || (this.start_date = moment(this.params.start_date));
+        if (this.start_date.isAfter(item.start_date)) {
+          return false;
+        }
+      }
+      if (this.params.end_date) {
+        this.end_date || (this.end_date = moment(this.params.end_date));
+        if (this.end_date.isBefore(item.end_date)) {
+          return false;
+        }
+      }
+      return true;
+    };
+
+    return Clinic;
+
+  })(window.Collection.Base);
+
+  angular.module('BBAdmin.Services').provider("ClinicCollections", function() {
+    return {
+      $get: function() {
+        return new window.BaseCollections();
+      }
+    };
+  });
+
+}).call(this);
 
 (function() {
   angular.module('BBAdminServices').directive('personTable', function(AdminCompanyService, AdminPerson, $log, ModalForm) {
@@ -179,18 +236,10 @@
           return $log.error("Failed to delete resource");
         });
       };
-      $scope.edit = function(resource) {
+      return $scope.edit = function(resource) {
         return ModalForm.edit({
           model: resource,
           title: 'Edit Resource'
-        });
-      };
-      return $scope.schedule = function(resource) {
-        return resource.$get('schedule').then(function(schedule) {
-          return ModalForm.edit({
-            model: schedule,
-            title: 'Edit Schedule'
-          });
         });
       };
     };
@@ -232,25 +281,22 @@
           return (start.isAfter(e.start) || start.isSame(e.start)) && (end.isBefore(e.end) || end.isSame(e.end));
         });
       };
-      options = $scope.setOptions;
-      options || (options = {});
+      options = $scope.$eval($attrs.scheduleCalendar) || {};
       $scope.options = {
         calendar: {
-          schedulerLicenseKey: '0598149132-fcs-1443104297',
-          height: options.height || "auto",
           editable: false,
           selectable: true,
-          defaultView: 'agendaWeek',
+          defaultView: 'agendaSelectAcrossWeek',
           header: {
             left: 'today,prev,next',
             center: 'title',
-            right: 'month,agendaWeek'
+            right: 'month,agendaSelectAcrossWeek'
           },
           selectHelper: false,
           eventOverlap: false,
           lazyFetching: false,
           views: {
-            agendaWeek: {
+            agendaSelectAcrossWeek: {
               duration: {
                 weeks: 1
               },
@@ -325,8 +371,7 @@
       templateUrl: 'schedule_cal_main.html',
       require: 'ngModel',
       scope: {
-        render: '=?',
-        setOptions: '=options'
+        render: '=?'
       }
     };
   });
@@ -349,10 +394,7 @@
     return {
       link: link,
       templateUrl: 'schedule_edit_main.html',
-      require: 'ngModel',
-      scope: {
-        options: '='
-      }
+      require: 'ngModel'
     };
   });
 
@@ -442,15 +484,12 @@
           return (start.isAfter(e.start) || start.isSame(e.start)) && (end.isBefore(e.end) || end.isSame(e.end));
         });
       };
-      options = $scope.setOptions;
-      options || (options = {});
+      options = $scope.$eval($attrs.scheduleWeekdays) || {};
       $scope.options = {
         calendar: {
-          schedulerLicenseKey: '0598149132-fcs-1443104297',
-          height: options.height || "auto",
           editable: false,
           selectable: true,
-          defaultView: 'agendaWeek',
+          defaultView: 'agendaSelectAcrossWeek',
           header: {
             left: '',
             center: 'title',
@@ -459,7 +498,7 @@
           selectHelper: false,
           eventOverlap: false,
           views: {
-            agendaWeek: {
+            agendaSelectAcrossWeek: {
               duration: {
                 weeks: 1
               },
@@ -532,8 +571,7 @@
       templateUrl: 'schedule_cal_main.html',
       require: 'ngModel',
       scope: {
-        render: '=?',
-        setOptions: '=options'
+        render: '=?'
       }
     };
   });
@@ -593,63 +631,6 @@
       controller: controller,
       link: link,
       templateUrl: 'service_table_main.html'
-    };
-  });
-
-}).call(this);
-
-(function() {
-  var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
-
-  window.Collection.Clinic = (function(superClass) {
-    extend(Clinic, superClass);
-
-    function Clinic() {
-      return Clinic.__super__.constructor.apply(this, arguments);
-    }
-
-    Clinic.prototype.checkItem = function(item) {
-      return Clinic.__super__.checkItem.apply(this, arguments);
-    };
-
-    Clinic.prototype.matchesParams = function(item) {
-      if (this.params.start_time) {
-        this.start_time || (this.start_time = moment(this.params.start_time));
-        if (this.start_time.isAfter(item.start_time)) {
-          return false;
-        }
-      }
-      if (this.params.end_time) {
-        this.end_time || (this.end_time = moment(this.params.end_time));
-        if (this.end_time.isBefore(item.end_time)) {
-          return false;
-        }
-      }
-      if (this.params.start_date) {
-        this.start_date || (this.start_date = moment(this.params.start_date));
-        if (this.start_date.isAfter(item.start_date)) {
-          return false;
-        }
-      }
-      if (this.params.end_date) {
-        this.end_date || (this.end_date = moment(this.params.end_date));
-        if (this.end_date.isBefore(item.end_date)) {
-          return false;
-        }
-      }
-      return true;
-    };
-
-    return Clinic;
-
-  })(window.Collection.Base);
-
-  angular.module('BBAdmin.Services').provider("ClinicCollections", function() {
-    return {
-      $get: function() {
-        return new window.BaseCollections();
-      }
     };
   });
 
@@ -1643,7 +1624,7 @@
           } else {
             return [m, range].join();
           }
-        }, "").split(',');
+        }, "");
       };
 
 
