@@ -289,9 +289,12 @@
           return (start.isAfter(e.start) || start.isSame(e.start)) && (end.isBefore(e.end) || end.isSame(e.end));
         });
       };
-      options = $scope.$eval($attrs.scheduleCalendar) || {};
+      options = $scope.setOptions;
+      options || (options = {});
       $scope.options = {
         calendar: {
+          schedulerLicenseKey: '0598149132-fcs-1443104297',
+          height: options.height || "auto",
           editable: false,
           selectable: true,
           defaultView: 'agendaWeek',
@@ -379,7 +382,8 @@
       templateUrl: 'schedule_cal_main.html',
       require: 'ngModel',
       scope: {
-        render: '=?'
+        render: '=?',
+        setOptions: '=options'
       }
     };
   });
@@ -402,7 +406,10 @@
     return {
       link: link,
       templateUrl: 'schedule_edit_main.html',
-      require: 'ngModel'
+      require: 'ngModel',
+      scope: {
+        options: '='
+      }
     };
   });
 
@@ -492,9 +499,12 @@
           return (start.isAfter(e.start) || start.isSame(e.start)) && (end.isBefore(e.end) || end.isSame(e.end));
         });
       };
-      options = $scope.$eval($attrs.scheduleWeekdays) || {};
+      options = $scope.setOptions;
+      options || (options = {});
       $scope.options = {
         calendar: {
+          schedulerLicenseKey: '0598149132-fcs-1443104297',
+          height: options.height || "auto",
           editable: false,
           selectable: true,
           defaultView: 'agendaWeek',
@@ -579,7 +589,8 @@
       templateUrl: 'schedule_cal_main.html',
       require: 'ngModel',
       scope: {
-        render: '=?'
+        render: '=?',
+        setOptions: '=options'
       }
     };
   });
