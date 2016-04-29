@@ -2071,7 +2071,7 @@
 }).call(this);
 
 (function() {
-  angular.module('BBAdmin.Services').factory('AdminScheduleService', function($q, BBModel, ScheduleRules) {
+  angular.module('BBAdmin.Services').factory('AdminScheduleService', function($q, BBModel, ScheduleRules, BBAssets) {
     return {
       query: function(params) {
         var company, defer;
@@ -2127,34 +2127,52 @@
           };
         })(this));
       },
-      mapPeopleToScheduleEvents: function(start, end, people) {
-        return _.map(people, function(p) {
+      getPeopleScheduleEvents: function(company, start, end) {
+        return this.getAssetsScheduleEvents(company, start, end);
+      },
+      mapPeopleToScheduleEvents: function(start, end, assets) {
+        return this.mapAssetsToScheduleEvents(start, end, assets);
+      },
+      mapAssetsToScheduleEvents: function(start, end, assets) {
+        return _.map(assets, function(asset) {
           var params;
           params = {
             start_date: start.format('YYYY-MM-DD'),
             end_date: end.format('YYYY-MM-DD')
           };
-          return p.$get('schedule', params).then(function(schedules) {
+          return asset.$get('schedule', params).then(function(schedules) {
             var events, rules;
             rules = new ScheduleRules(schedules.dates);
             events = rules.toEvents();
             _.each(events, function(e) {
-              e.resourceId = p.id;
-              e.title = p.name;
+              e.resourceId = asset.id;
+              e.title = asset.name;
               return e.rendering = "background";
             });
             return events;
           });
         });
       },
-      getPeopleScheduleEvents: function(company, start, end) {
-        return company.getPeoplePromise().then((function(_this) {
-          return function(people) {
-            return $q.all(_this.mapPeopleToScheduleEvents(start, end, people)).then(function(schedules) {
+      getAssetsScheduleEvents: function(company, start, end, filtered, requested) {
+        var localMethod;
+        if (filtered == null) {
+          filtered = false;
+        }
+        if (requested == null) {
+          requested = [];
+        }
+        if (filtered) {
+          return $q.all(this.mapAssetsToScheduleEvents(start, end, requested)).then(function(schedules) {
+            return _.flatten(schedules);
+          });
+        } else {
+          localMethod = this.mapAssetsToScheduleEvents;
+          return BBAssets(company).then(function(assets) {
+            return $q.all(localMethod(start, end, assets)).then(function(schedules) {
               return _.flatten(schedules);
             });
-          };
-        })(this));
+          });
+        }
       }
     };
   });
