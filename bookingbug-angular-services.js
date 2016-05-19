@@ -629,10 +629,20 @@
           return $log.error("Failed to delete service");
         });
       };
-      return $scope.edit = function(service) {
+      $scope.edit = function(service) {
         return ModalForm.edit({
           model: service,
           title: 'Edit Service'
+        });
+      };
+      return $scope.newBooking = function(service) {
+        return ModalForm.book({
+          model: service,
+          company: $scope.company,
+          title: 'New Booking',
+          success: function(booking) {
+            return $log.info('Created new booking ', booking);
+          }
         });
       };
     };
