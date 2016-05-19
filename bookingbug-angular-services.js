@@ -1951,7 +1951,7 @@
 }).call(this);
 
 (function() {
-  angular.module('BBAdminServices').factory('AdminPersonService', function($q, $window, $rootScope, halClient, SlotCollections, BBModel, LoginService, $log) {
+  angular.module('BBAdminServices').factory('AdminPersonService', function($q, $window, $rootScope, halClient, SlotCollections, BookingCollections, BBModel, LoginService, $log) {
     return {
       query: function(params) {
         var company, defer;
@@ -1987,10 +1987,18 @@
         var deferred;
         deferred = $q.defer();
         person.$put('block', {}, data).then((function(_this) {
-          return function(slot) {
-            slot = new BBModel.Admin.Slot(slot);
-            SlotCollections.checkItems(slot);
-            return deferred.resolve(slot);
+          return function(response) {
+            var booking, slot;
+            console.log('response ', response);
+            if (response.$href('self').indexOf('bookings') > -1) {
+              booking = new BBModel.Admin.Booking(response);
+              BookingCollections.checkItems(booking);
+              return deferred.resolve(booking);
+            } else {
+              slot = new BBModel.Admin.Slot(response);
+              SlotCollections.checkItems(slot);
+              return deferred.resolve(slot);
+            }
           };
         })(this), (function(_this) {
           return function(err) {
