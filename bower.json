@@ -1,6 +1,6 @@
 {
   "name": "bookingbug-angular-services",
-  "version": "1.1.20",
+  "version": "1.1.21",
   "homepage": "https://github.com/BookingBug/bookingbug-angular-services-bower",
   "authors": [
     "Glenn Shoosmith <glenn@bookingbug.com>",
@@ -20,8 +20,8 @@
     "tests"
   ],
   "dependencies": {
-    "bookingbug-angular-core": "1.1.20",
-    "bookingbug-angular-admin": "1.1.20",
+    "bookingbug-angular-core": "1.1.21",
+    "bookingbug-angular-admin": "1.1.21",
     "angular-ui-calendar": "~1.0.0",
     "fullcalendar": "2.3.1"
   },
