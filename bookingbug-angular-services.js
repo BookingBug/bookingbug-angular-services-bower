@@ -2152,7 +2152,11 @@
         return this.mapAssetsToScheduleEvents(start, end, assets);
       },
       mapAssetsToScheduleEvents: function(start, end, assets) {
-        return _.map(assets, function(asset) {
+        var assets_with_schedule;
+        assets_with_schedule = _.filter(assets, function(asset) {
+          return asset.$has('schedule');
+        });
+        return _.map(assets_with_schedule, function(asset) {
           var params;
           params = {
             start_date: start.format('YYYY-MM-DD'),
