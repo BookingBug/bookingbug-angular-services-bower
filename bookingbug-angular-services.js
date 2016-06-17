@@ -1989,7 +1989,6 @@
         person.$put('block', {}, data).then((function(_this) {
           return function(response) {
             var booking, slot;
-            console.log('response ', response);
             if (response.$href('self').indexOf('bookings') > -1) {
               booking = new BBModel.Admin.Booking(response);
               BookingCollections.checkItems(booking);
@@ -2062,19 +2061,20 @@
         return defer.promise;
       },
       block: function(company, resource, data) {
-        var deferred, href, prms, uri;
-        prms = {
-          id: resource.id,
-          company_id: company.id
-        };
+        var deferred;
         deferred = $q.defer();
-        href = "/api/v1/admin/{company_id}/resource/{id}/block";
-        uri = new UriTemplate(href).fillFromObject(prms || {});
-        halClient.$put(uri, {}, data).then((function(_this) {
-          return function(slot) {
-            slot = new BBModel.Admin.Slot(slot);
-            SlotCollections.checkItems(slot);
-            return deferred.resolve(slot);
+        resource.$put('block', {}, data).then((function(_this) {
+          return function(response) {
+            var booking, slot;
+            if (response.$href('self').indexOf('bookings') > -1) {
+              booking = new BBModel.Admin.Booking(response);
+              BookingCollections.checkItems(booking);
+              return deferred.resolve(booking);
+            } else {
+              slot = new BBModel.Admin.Slot(response);
+              SlotCollections.checkItems(slot);
+              return deferred.resolve(slot);
+            }
           };
         })(this), (function(_this) {
           return function(err) {
