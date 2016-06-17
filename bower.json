@@ -1,14 +1,6 @@
 {
   "name": "bookingbug-angular-services",
-<<<<<<< HEAD
-<<<<<<< HEAD
-  "version": "1.1.19",
-=======
-  "version": "1.1.25",
->>>>>>> 1dac3e99607f6915aa66767c82de0955fc50276d
-=======
   "version": "1.1.37",
->>>>>>> 920a2b85c4928cece4015c1f46bd9ee22fff2f40
   "homepage": "https://github.com/BookingBug/bookingbug-angular-services-bower",
   "authors": [
     "Glenn Shoosmith <glenn@bookingbug.com>",
@@ -28,18 +20,8 @@
     "tests"
   ],
   "dependencies": {
-<<<<<<< HEAD
-<<<<<<< HEAD
-    "bookingbug-angular-core": "1.1.19",
-    "bookingbug-angular-admin": "1.1.19",
-=======
-    "bookingbug-angular-core": "1.1.25",
-    "bookingbug-angular-admin": "1.1.25",
->>>>>>> 1dac3e99607f6915aa66767c82de0955fc50276d
-=======
     "bookingbug-angular-core": "1.1.37",
     "bookingbug-angular-admin": "1.1.37",
->>>>>>> 920a2b85c4928cece4015c1f46bd9ee22fff2f40
     "angular-ui-calendar": "~1.0.0",
     "fullcalendar": "2.3.1"
   },
