@@ -2,9 +2,9 @@
   'use strict';
   angular.module('BBAdminServices', ['BB', 'BBAdmin.Services', 'BBAdmin.Filters', 'BBAdmin.Controllers', 'trNgGrid', 'ui.calendar']);
 
-  angular.module('BBAdminServices').config(["$logProvider", function($logProvider) {
+  angular.module('BBAdminServices').config(function($logProvider) {
     return $logProvider.debugEnabled(true);
-  }]);
+  });
 
   angular.module('BBAdminServicesMockE2E', ['BBAdminServices', 'BBAdminMockE2E']);
 
@@ -140,7 +140,7 @@
 }).call(this);
 
 (function() {
-  angular.module('BBAdminServices').directive('personTable', ["AdminCompanyService", "AdminPerson", "$log", "ModalForm", function(AdminCompanyService, AdminPerson, $log, ModalForm) {
+  angular.module('BBAdminServices').directive('personTable', function(AdminCompanyService, AdminPerson, $log, ModalForm) {
     var controller, link;
     controller = function($scope) {
       $scope.fields = ['id', 'name', 'mobile'];
@@ -197,12 +197,12 @@
       link: link,
       templateUrl: 'person_table_main.html'
     };
-  }]);
+  });
 
 }).call(this);
 
 (function() {
-  angular.module('BBAdminServices').directive('resourceTable', ["AdminCompanyService", "AdminResourceService", "$modal", "$log", "ModalForm", function(AdminCompanyService, AdminResourceService, $modal, $log, ModalForm) {
+  angular.module('BBAdminServices').directive('resourceTable', function(AdminCompanyService, AdminResourceService, $modal, $log, ModalForm) {
     var controller, link;
     controller = function($scope) {
       $scope.fields = ['id', 'name'];
@@ -266,12 +266,12 @@
       link: link,
       templateUrl: 'resource_table_main.html'
     };
-  }]);
+  });
 
 }).call(this);
 
 (function() {
-  angular.module('BBAdminServices').directive('scheduleCalendar', ["uiCalendarConfig", "ScheduleRules", function(uiCalendarConfig, ScheduleRules) {
+  angular.module('BBAdminServices').directive('scheduleCalendar', function(uiCalendarConfig, ScheduleRules) {
     var controller, link;
     controller = function($scope, $attrs) {
       var options;
@@ -386,7 +386,7 @@
         setOptions: '=options'
       }
     };
-  }]);
+  });
 
 }).call(this);
 
@@ -413,15 +413,15 @@
     };
   });
 
-  angular.module('schemaForm').config(["schemaFormProvider", "schemaFormDecoratorsProvider", "sfPathProvider", function(schemaFormProvider, schemaFormDecoratorsProvider, sfPathProvider) {
+  angular.module('schemaForm').config(function(schemaFormProvider, schemaFormDecoratorsProvider, sfPathProvider) {
     schemaFormDecoratorsProvider.addMapping('bootstrapDecorator', 'schedule', 'schedule_edit_form.html');
     return schemaFormDecoratorsProvider.createDirective('schedule', 'schedule_edit_form.html');
-  }]);
+  });
 
 }).call(this);
 
 (function() {
-  angular.module('BBAdminServices').directive('scheduleTable', ["AdminCompanyService", "AdminScheduleService", "$modal", "$log", "ModalForm", function(AdminCompanyService, AdminScheduleService, $modal, $log, ModalForm) {
+  angular.module('BBAdminServices').directive('scheduleTable', function(AdminCompanyService, AdminScheduleService, $modal, $log, ModalForm) {
     var controller, link;
     controller = function($scope) {
       $scope.fields = ['id', 'name', 'mobile'];
@@ -476,12 +476,12 @@
       link: link,
       templateUrl: 'schedule_table_main.html'
     };
-  }]);
+  });
 
 }).call(this);
 
 (function() {
-  angular.module('BBAdminServices').directive('scheduleWeekdays', ["uiCalendarConfig", "ScheduleRules", function(uiCalendarConfig, ScheduleRules) {
+  angular.module('BBAdminServices').directive('scheduleWeekdays', function(uiCalendarConfig, ScheduleRules) {
     var controller, link;
     controller = function($scope, $attrs) {
       var options;
@@ -593,12 +593,12 @@
         setOptions: '=options'
       }
     };
-  }]);
+  });
 
 }).call(this);
 
 (function() {
-  angular.module('BBAdminServices').directive('serviceTable', ["AdminCompanyService", "AdminServiceService", "$modal", "$log", "ModalForm", function(AdminCompanyService, AdminServiceService, $modal, $log, ModalForm) {
+  angular.module('BBAdminServices').directive('serviceTable', function(AdminCompanyService, AdminServiceService, $modal, $log, ModalForm) {
     var controller, link;
     controller = function($scope) {
       $scope.fields = ['id', 'name'];
@@ -661,7 +661,7 @@
       link: link,
       templateUrl: 'service_table_main.html'
     };
-  }]);
+  });
 
 }).call(this);
 
@@ -686,7 +686,7 @@
   var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
-  angular.module('BB.Models').factory("Admin.AddressModel", ["$q", "BBModel", "BaseModel", "AddressModel", function($q, BBModel, BaseModel, AddressModel) {
+  angular.module('BB.Models').factory("Admin.AddressModel", function($q, BBModel, BaseModel, AddressModel) {
 
     /***
     * @ngdoc method
@@ -717,7 +717,7 @@
       return Admin_Address;
 
     })(AddressModel);
-  }]);
+  });
 
 }).call(this);
 
@@ -748,7 +748,7 @@
   var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
-  angular.module('BB.Models').factory("Admin.ClinicModel", ["$q", "BBModel", "BaseModel", "ClinicModel", function($q, BBModel, BaseModel, ClinicModel) {
+  angular.module('BB.Models').factory("Admin.ClinicModel", function($q, BBModel, BaseModel, ClinicModel) {
     var Admin_Clinic;
     return Admin_Clinic = (function(superClass) {
       extend(Admin_Clinic, superClass);
@@ -909,7 +909,7 @@
       return Admin_Clinic;
 
     })(ClinicModel);
-  }]);
+  });
 
 }).call(this);
 
@@ -932,7 +932,7 @@
   var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
-  angular.module('BB.Models').factory("Admin.PersonModel", ["$q", "BBModel", "BaseModel", "PersonModel", "AdminPersonService", function($q, BBModel, BaseModel, PersonModel, AdminPersonService) {
+  angular.module('BB.Models').factory("Admin.PersonModel", function($q, BBModel, BaseModel, PersonModel, AdminPersonService) {
     var Admin_Person;
     return Admin_Person = (function(superClass) {
       extend(Admin_Person, superClass);
@@ -1235,11 +1235,11 @@
       return Admin_Person;
 
     })(PersonModel);
-  }]);
+  });
 
-  angular.module('BB.Models').factory('AdminPerson', ["$injector", function($injector) {
+  angular.module('BB.Models').factory('AdminPerson', function($injector) {
     return $injector.get('Admin.PersonModel');
-  }]);
+  });
 
 }).call(this);
 
@@ -1264,7 +1264,7 @@
   var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
-  angular.module('BB.Models').factory("Admin.ResourceModel", ["$q", "BBModel", "BaseModel", "ResourceModel", function($q, BBModel, BaseModel, ResourceModel) {
+  angular.module('BB.Models').factory("Admin.ResourceModel", function($q, BBModel, BaseModel, ResourceModel) {
     var Admin_Resource;
     return Admin_Resource = (function(superClass) {
       extend(Admin_Resource, superClass);
@@ -1315,7 +1315,7 @@
       return Admin_Resource;
 
     })(ResourceModel);
-  }]);
+  });
 
 }).call(this);
 
@@ -1338,7 +1338,7 @@
   var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
-  angular.module('BB.Models').factory("Admin.ScheduleModel", ["$q", "BBModel", "BaseModel", "ScheduleRules", function($q, BBModel, BaseModel, ScheduleRules) {
+  angular.module('BB.Models').factory("Admin.ScheduleModel", function($q, BBModel, BaseModel, ScheduleRules) {
     var Admin_Schedule;
     return Admin_Schedule = (function(superClass) {
       extend(Admin_Schedule, superClass);
@@ -1372,7 +1372,7 @@
       return Admin_Schedule;
 
     })(BaseModel);
-  }]);
+  });
 
 }).call(this);
 
@@ -1797,7 +1797,7 @@
   var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
-  angular.module('BB.Models').factory("Admin.ServiceModel", ["$q", "BBModel", "ServiceModel", function($q, BBModel, ServiceModel) {
+  angular.module('BB.Models').factory("Admin.ServiceModel", function($q, BBModel, ServiceModel) {
     var Admin_Service;
     return Admin_Service = (function(superClass) {
       extend(Admin_Service, superClass);
@@ -1809,12 +1809,12 @@
       return Admin_Service;
 
     })(ServiceModel);
-  }]);
+  });
 
 }).call(this);
 
 (function() {
-  angular.module('BBAdmin.Services').factory('AdminAddressService', ["$q", "BBModel", function($q, BBModel) {
+  angular.module('BBAdmin.Services').factory('AdminAddressService', function($q, BBModel) {
     return {
       query: function(params) {
         var company, defer;
@@ -1842,12 +1842,12 @@
         return defer.promise;
       }
     };
-  }]);
+  });
 
 }).call(this);
 
 (function() {
-  angular.module('BBAdmin.Services').factory('AdminClinicService', ["$q", "BBModel", "ClinicCollections", "$window", function($q, BBModel, ClinicCollections, $window) {
+  angular.module('BBAdmin.Services').factory('AdminClinicService', function($q, BBModel, ClinicCollections, $window) {
     return {
       query: function(params) {
         var company, defer, existing;
@@ -1946,12 +1946,12 @@
         return deferred.promise;
       }
     };
-  }]);
+  });
 
 }).call(this);
 
 (function() {
-  angular.module('BBAdminServices').factory('AdminPersonService', ["$q", "$window", "$rootScope", "halClient", "SlotCollections", "BookingCollections", "BBModel", "LoginService", "$log", function($q, $window, $rootScope, halClient, SlotCollections, BookingCollections, BBModel, LoginService, $log) {
+  angular.module('BBAdminServices').factory('AdminPersonService', function($q, $window, $rootScope, halClient, SlotCollections, BookingCollections, BBModel, LoginService, $log) {
     return {
       query: function(params) {
         var company, defer;
@@ -2028,12 +2028,12 @@
         });
       }
     };
-  }]);
+  });
 
 }).call(this);
 
 (function() {
-  angular.module('BBAdmin.Services').factory('AdminResourceService', ["$q", "UriTemplate", "halClient", "SlotCollections", "BBModel", function($q, UriTemplate, halClient, SlotCollections, BBModel) {
+  angular.module('BBAdmin.Services').factory('AdminResourceService', function($q, UriTemplate, halClient, SlotCollections, BBModel) {
     return {
       query: function(params) {
         var company, defer;
@@ -2084,12 +2084,12 @@
         return deferred.promise;
       }
     };
-  }]);
+  });
 
 }).call(this);
 
 (function() {
-  angular.module('BBAdmin.Services').factory('AdminScheduleService', ["$q", "BBModel", "ScheduleRules", "BBAssets", function($q, BBModel, ScheduleRules, BBAssets) {
+  angular.module('BBAdmin.Services').factory('AdminScheduleService', function($q, BBModel, ScheduleRules, BBAssets) {
     return {
       query: function(params) {
         var company, defer;
@@ -2197,12 +2197,12 @@
         }
       }
     };
-  }]);
+  });
 
 }).call(this);
 
 (function() {
-  angular.module('BBAdmin.Services').factory('AdminServiceService', ["$q", "BBModel", "$log", function($q, BBModel, $log) {
+  angular.module('BBAdmin.Services').factory('AdminServiceService', function($q, BBModel, $log) {
     return {
       query: function(params) {
         var company, defer;
@@ -2230,28 +2230,28 @@
         return defer.promise;
       }
     };
-  }]);
+  });
 
 }).call(this);
 
 (function() {
-  angular.module('BBAdminServices').factory("BB.Service.schedule", ["$q", "BBModel", function($q, BBModel) {
+  angular.module('BBAdminServices').factory("BB.Service.schedule", function($q, BBModel) {
     return {
       unwrap: function(resource) {
         return new BBModel.Admin.Schedule(resource);
       }
     };
-  }]);
+  });
 
-  angular.module('BBAdminServices').factory("BB.Service.person", ["$q", "BBModel", function($q, BBModel) {
+  angular.module('BBAdminServices').factory("BB.Service.person", function($q, BBModel) {
     return {
       unwrap: function(resource) {
         return new BBModel.Admin.Person(resource);
       }
     };
-  }]);
+  });
 
-  angular.module('BBAdminServices').factory("BB.Service.people", ["$q", "BBModel", function($q, BBModel) {
+  angular.module('BBAdminServices').factory("BB.Service.people", function($q, BBModel) {
     return {
       promise: true,
       unwrap: function(resource) {
@@ -2275,17 +2275,17 @@
         return deferred.promise;
       }
     };
-  }]);
+  });
 
-  angular.module('BBAdminServices').factory("BB.Service.resource", ["$q", "BBModel", function($q, BBModel) {
+  angular.module('BBAdminServices').factory("BB.Service.resource", function($q, BBModel) {
     return {
       unwrap: function(resource) {
         return new BBModel.Admin.Resource(resource);
       }
     };
-  }]);
+  });
 
-  angular.module('BBAdminServices').factory("BB.Service.resources", ["$q", "BBModel", function($q, BBModel) {
+  angular.module('BBAdminServices').factory("BB.Service.resources", function($q, BBModel) {
     return {
       promise: true,
       unwrap: function(resource) {
@@ -2309,17 +2309,17 @@
         return deferred.promise;
       }
     };
-  }]);
+  });
 
-  angular.module('BBAdminServices').factory("BB.Service.service", ["$q", "BBModel", function($q, BBModel) {
+  angular.module('BBAdminServices').factory("BB.Service.service", function($q, BBModel) {
     return {
       unwrap: function(resource) {
         return new BBModel.Admin.Service(resource);
       }
     };
-  }]);
+  });
 
-  angular.module('BBAdminServices').factory("BB.Service.services", ["$q", "BBModel", function($q, BBModel) {
+  angular.module('BBAdminServices').factory("BB.Service.services", function($q, BBModel) {
     return {
       promise: true,
       unwrap: function(resource) {
@@ -2343,6 +2343,6 @@
         return deferred.promise;
       }
     };
-  }]);
+  });
 
 }).call(this);
