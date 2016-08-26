@@ -10,79 +10,8 @@
 
 }).call(this);
 
-// $.fullCalendar.Grid.prototype.setElement = function(el) {
-//   var noEventClick = this.view.opt('noEventClick');
-//   var _this = this;
-
-//   this.el = el
-
-//   // attach a handler to the grid's root element.
-//   this.el.on('mousedown', function(ev) {
-//     if (
-//       (!$(ev.target).is('.fc-event-container *, .fc-more') || noEventClick) && // not an an event element, or "more.." link
-//       !$(ev.target).closest('.fc-popover').length // not on a popover (like the "more.." events one)
-//     ) {
-//       _this.dayMousedown(ev);
-//     }
-//   });
-
-//   // attach event-element-related handlers. in Grid.events
-//   // same garbage collection note as above.
-//   this.bindSegHandlers();
-
-//   this.bindGlobalHandlers();
-
-// }
-
-
-// var FC = $.fullCalendar;
-// var agendaSelectAcrossWeek
-// agendaSelectAcrossWeek = FC.views.agenda['class'].extend({
-
-//   initialize: function() {
-//     FC.views.agenda['class'].prototype.initialize.apply(this);
-//     this.timeGrid.renderSelection = this.renderSelection;
-//   },
-
-//   splitRange: function(range) {
-//     var start = range.start;
-//     var end = range.end;
-//     days = moment.duration(end.diff(start)).days()
-//     return _.map(_.range(days + 1), function(i) {
-//       day = moment(start).add(i, 'days');
-//       return {
-//         start: day.set({'hour': start.hour(), 'minute': start.minute()}),
-//         end: moment(day).set({'hour': end.hour(), 'minute': end.minute()})
-//       };
-//     })
-//   },
-
-//   reportSelection: function(range, ev) {
-//     _.each(this.splitRange(range), function(r) {
-//       FC.views.agenda['class'].prototype.reportSelection.apply(this, [r, ev])
-//     }, this);
-//   },
-
-//   renderSelection: function(range) {
-//     var ranges = this.view.splitRange(range);
-//     if (this.view.opt('selectHelper')) {
-//       _.each(ranges, this.renderRangeHelper, this);
-//     }
-//     else {
-//       segs = _.reduce(ranges, function(s, r) {
-//         return s.concat(this.rangeToSegs(r))
-//       }, [], this);
-//       this.renderFill('highlight', segs);
-//       this.view.trigger('selectx', null, range.start, range.end, null);
-//     }
-//   }
-
-// });
-
-// $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
-
-
 (function() {
+  'use strict';
   var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
@@ -140,12 +69,15 @@
 }).call(this);
 
 (function() {
-  angular.module('BBAdminServices').directive('personTable', ["AdminCompanyService", "AdminPerson", "$log", "ModalForm", function(AdminCompanyService, AdminPerson, $log, ModalForm) {
+  'use strict';
+  angular.module('BBAdminServices').directive('personTable', ["$log", "ModalForm", "BBModel", function($log, ModalForm, BBModel) {
     var controller, link;
     controller = function($scope) {
       $scope.fields = ['id', 'name', 'mobile'];
       $scope.getPeople = function() {
-        return AdminPerson.query($scope.company).then(function(people) {
+        return BBModel.Admin.Person.$query({
+          company: $scope.company
+        }).then(function(people) {
           return $scope.people = people;
         });
       };
@@ -186,7 +118,7 @@
       if (scope.company) {
         return scope.getPeople();
       } else {
-        return AdminCompanyService.query(attrs).then(function(company) {
+        return BBModel.Admin.Company.$query(attrs).then(function(company) {
           scope.company = company;
           return scope.getPeople();
         });
@@ -202,7 +134,8 @@
 }).call(this);
 
 (function() {
-  angular.module('BBAdminServices').directive('resourceTable', ["AdminCompanyService", "AdminResourceService", "$modal", "$log", "ModalForm", function(AdminCompanyService, AdminResourceService, $modal, $log, ModalForm) {
+  'use strict';
+  angular.module('BBAdminServices').directive('resourceTable', ["BBModel", "$log", "ModalForm", function(BBModel, $log, ModalForm) {
     var controller, link;
     controller = function($scope) {
       $scope.fields = ['id', 'name'];
@@ -211,7 +144,7 @@
         params = {
           company: $scope.company
         };
-        return AdminResourceService.query(params).then(function(resources) {
+        return BBModel.Admin.Resource.$query(params).then(function(resources) {
           return $scope.resources = resources;
         });
       };
@@ -255,7 +188,7 @@
       if (scope.company) {
         return scope.getResources();
       } else {
-        return AdminCompanyService.query(attrs).then(function(company) {
+        return BBModel.Admin.Company.$query(attrs).then(function(company) {
           scope.company = company;
           return scope.getResources();
         });
@@ -271,6 +204,7 @@
 }).call(this);
 
 (function() {
+  'use strict';
   angular.module('BBAdminServices').directive('scheduleCalendar', ["uiCalendarConfig", "ScheduleRules", function(uiCalendarConfig, ScheduleRules) {
     var controller, link;
     controller = function($scope, $attrs) {
@@ -391,6 +325,7 @@
 }).call(this);
 
 (function() {
+  'use strict';
   angular.module('BBAdminServices').directive('scheduleEdit', function() {
     var link;
     link = function(scope, element, attrs, ngModel) {
@@ -421,7 +356,8 @@
 }).call(this);
 
 (function() {
-  angular.module('BBAdminServices').directive('scheduleTable', ["AdminCompanyService", "AdminScheduleService", "$modal", "$log", "ModalForm", function(AdminCompanyService, AdminScheduleService, $modal, $log, ModalForm) {
+  'use strict';
+  angular.module('BBAdminServices').directive('scheduleTable', ["BBModel", "$log", "ModalForm", function(BBModel, $log, ModalForm) {
     var controller, link;
     controller = function($scope) {
       $scope.fields = ['id', 'name', 'mobile'];
@@ -430,7 +366,7 @@
         params = {
           company: $scope.company
         };
-        return AdminScheduleService.query(params).then(function(schedules) {
+        return BBModel.Admin.Schedule.query(params).then(function(schedules) {
           return $scope.schedules = schedules;
         });
       };
@@ -465,7 +401,7 @@
       if (scope.company) {
         return scope.getSchedules();
       } else {
-        return AdminCompanyService.query(attrs).then(function(company) {
+        return BBModel.Admin.Company.query(attrs).then(function(company) {
           scope.company = company;
           return scope.getSchedules();
         });
@@ -481,6 +417,7 @@
 }).call(this);
 
 (function() {
+  'use strict';
   angular.module('BBAdminServices').directive('scheduleWeekdays', ["uiCalendarConfig", "ScheduleRules", function(uiCalendarConfig, ScheduleRules) {
     var controller, link;
     controller = function($scope, $attrs) {
@@ -598,7 +535,8 @@
 }).call(this);
 
 (function() {
-  angular.module('BBAdminServices').directive('serviceTable', ["AdminCompanyService", "AdminServiceService", "$modal", "$log", "ModalForm", function(AdminCompanyService, AdminServiceService, $modal, $log, ModalForm) {
+  'use strict';
+  angular.module('BBAdminServices').directive('serviceTable', ["$uibModal", "$log", "ModalForm", "BBModel", function($uibModal, $log, ModalForm, BBModel) {
     var controller, link;
     controller = function($scope) {
       $scope.fields = ['id', 'name'];
@@ -607,7 +545,7 @@
         params = {
           company: $scope.company
         };
-        return AdminServiceService.query(params).then(function(services) {
+        return BBModel.Admin.Service.$query(params).then(function(services) {
           return $scope.services = services;
         });
       };
@@ -650,7 +588,7 @@
       if (scope.company) {
         return scope.getServices();
       } else {
-        return AdminCompanyService.query(attrs).then(function(company) {
+        return BBModel.Admin.Company.query(attrs).then(function(company) {
           scope.company = company;
           return scope.getServices();
         });
@@ -675,18 +613,18 @@
   * @description
   * Representation of an Address Object
   *
-  * @property {string} address1 First line of the address 
-  * @property {string} address2 Second line of the address 
-  * @property {string} address3 Third line of the address 
-  * @property {string} address4 Fourth line of the address 
-  * @property {string} address5 Fifth line of the address 
+  * @property {string} address1 First line of the address
+  * @property {string} address2 Second line of the address
+  * @property {string} address3 Third line of the address
+  * @property {string} address4 Fourth line of the address
+  * @property {string} address5 Fifth line of the address
   * @property {string} postcode The Postcode/Zipcode
   * @property {string} country The country
    */
   var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
-  angular.module('BB.Models').factory("Admin.AddressModel", ["$q", "BBModel", "BaseModel", "AddressModel", function($q, BBModel, BaseModel, AddressModel) {
+  angular.module('BB.Models').factory("AdminAddressModel", ["$q", "BBModel", "BaseModel", "AddressModel", function($q, BBModel, BaseModel, AddressModel) {
 
     /***
     * @ngdoc method
@@ -732,7 +670,7 @@
   * Representation of an Clinic Object
   *
   * @property {string} setTimes Set times for the clinic
-  * @property {string} setResourcesAndPeople Set resources and people for the clinic 
+  * @property {string} setResourcesAndPeople Set resources and people for the clinic
   * @property {object} settings Clinic settings
   * @property {string} resources Clinic resources
   * @property {integer} resource_ids Clinic resources ids
@@ -748,7 +686,7 @@
   var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
-  angular.module('BB.Models').factory("Admin.ClinicModel", ["$q", "BBModel", "BaseModel", "ClinicModel", function($q, BBModel, BaseModel, ClinicModel) {
+  angular.module('BB.Models').factory("AdminClinicModel", ["$q", "BBModel", "BaseModel", "ClinicModel", function($q, BBModel, BaseModel, ClinicModel) {
     var Admin_Clinic;
     return Admin_Clinic = (function(superClass) {
       extend(Admin_Clinic, superClass);
@@ -932,46 +870,14 @@
   var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
-  angular.module('BB.Models').factory("Admin.PersonModel", ["$q", "BBModel", "BaseModel", "PersonModel", "AdminPersonService", function($q, BBModel, BaseModel, PersonModel, AdminPersonService) {
+  angular.module('BB.Models').factory("AdminPersonModel", ["$q", "AdminPersonService", "BBModel", "BaseModel", "PersonModel", function($q, AdminPersonService, BBModel, BaseModel, PersonModel) {
     var Admin_Person;
     return Admin_Person = (function(superClass) {
       extend(Admin_Person, superClass);
 
       function Admin_Person(data) {
         Admin_Person.__super__.constructor.call(this, data);
-        if (!this.queuing_disabled) {
-          this.setCurrentCustomer();
-        }
       }
-
-
-      /***
-      * @ngdoc method
-      * @name setCurrentCustomer
-      * @methodOf BB.Models:AdminPerson
-      * @description
-      * Set current customer
-      *
-      * @returns {Promise} Returns a promise that rezolve the current customer
-       */
-
-      Admin_Person.prototype.setCurrentCustomer = function() {
-        var defer;
-        defer = $q.defer();
-        if (this.$has('queuer')) {
-          this.$get('queuer').then((function(_this) {
-            return function(queuer) {
-              _this.serving = new BBModel.Admin.Queuer(queuer);
-              return defer.resolve(_this.serving);
-            };
-          })(this), function(err) {
-            return defer.reject(err);
-          });
-        } else {
-          defer.resolve();
-        }
-        return defer.promise;
-      };
 
 
       /***
@@ -1204,41 +1110,21 @@
         })(this));
       };
 
+      Admin_Person.$query = function(params) {
+        return AdminPersonService.query(params);
+      };
 
-      /***
-      * @ngdoc method
-      * @name query
-      * @param {Company} company The company model.
-      * @param {integer=} page Specifies particular page of paginated response.
-      * @param {integer=} per_page Number of items per page of paginated response.
-      * @param {string=} filter_by_fields Comma separated list of field, value pairs to filter results by.
-      * @param {string=} order_by Specifies field to order results by.
-      * @param {boolean=} order_by_reverse Reverses the ordered results if true.
-      * @methodOf BB.Models:AdminPerson
-      * @description
-      * Gets a filtered collection of people.
-      *
-      * @returns {Promise} Returns a promise that resolves to the filtered collection of people.
-       */
+      Admin_Person.$block = function(company, person, data) {
+        return AdminPersonService.block(company, person, data);
+      };
 
-      Admin_Person.query = function(company, page, per_page, filter_by_fields, order_by, order_by_reverse) {
-        return AdminPersonService.query({
-          company: company,
-          page: page,
-          per_page: per_page,
-          filter_by_fields: filter_by_fields,
-          order_by: order_by,
-          order_by_reverse: order_by_reverse
-        });
+      Admin_Person.$signup = function(user, data) {
+        return AdminPersonService.signup(user, data);
       };
 
       return Admin_Person;
 
     })(PersonModel);
-  }]);
-
-  angular.module('BB.Models').factory('AdminPerson', ["$injector", function($injector) {
-    return $injector.get('Admin.PersonModel');
   }]);
 
 }).call(this);
@@ -1264,7 +1150,7 @@
   var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
-  angular.module('BB.Models').factory("Admin.ResourceModel", ["$q", "BBModel", "BaseModel", "ResourceModel", function($q, BBModel, BaseModel, ResourceModel) {
+  angular.module('BB.Models').factory("AdminResourceModel", ["$q", "AdminResourceService", "BBModel", "BaseModel", "ResourceModel", function($q, AdminResourceService, BBModel, BaseModel, ResourceModel) {
     var Admin_Resource;
     return Admin_Resource = (function(superClass) {
       extend(Admin_Resource, superClass);
@@ -1312,6 +1198,14 @@
         return this.availability[str] === "Yes";
       };
 
+      Admin_Resource.$query = function(params) {
+        return AdminResourceService.query(params);
+      };
+
+      Admin_Resource.$block = function(company, resource, data) {
+        return block(company, resource, data);
+      };
+
       return Admin_Resource;
 
     })(ResourceModel);
@@ -1338,7 +1232,7 @@
   var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
-  angular.module('BB.Models').factory("Admin.ScheduleModel", ["$q", "BBModel", "BaseModel", "ScheduleRules", function($q, BBModel, BaseModel, ScheduleRules) {
+  angular.module('BB.Models').factory("AdminScheduleModel", ["$q", "AdminScheduleService", "BBModel", "BaseModel", "ScheduleRules", function($q, AdminScheduleService, BBModel, BaseModel, ScheduleRules) {
     var Admin_Schedule;
     return Admin_Schedule = (function(superClass) {
       extend(Admin_Schedule, superClass);
@@ -1367,6 +1261,18 @@
         data.company_id = this.company_id;
         data.duration = this.duration;
         return data;
+      };
+
+      Admin_Schedule.$query = function(params) {
+        return AdminScheduleService.query(params);
+      };
+
+      Admin_Schedule.$delete = function(schedule) {
+        return AdminScheduleService["delete"](schedule);
+      };
+
+      Admin_Schedule.$update = function(schedule) {
+        return AdminScheduleService.update(schedule);
       };
 
       return Admin_Schedule;
@@ -1797,7 +1703,7 @@
   var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
-  angular.module('BB.Models').factory("Admin.ServiceModel", ["$q", "BBModel", "ServiceModel", function($q, BBModel, ServiceModel) {
+  angular.module('BB.Models').factory("AdminServiceModel", ["$q", "AdminServiceService", "BBModel", "ServiceModel", function($q, AdminServiceService, BBModel, ServiceModel) {
     var Admin_Service;
     return Admin_Service = (function(superClass) {
       extend(Admin_Service, superClass);
@@ -1805,6 +1711,10 @@
       function Admin_Service() {
         return Admin_Service.__super__.constructor.apply(this, arguments);
       }
+
+      Admin_Service.$query = function(params) {
+        return AdminServiceService.query(params);
+      };
 
       return Admin_Service;
 
@@ -1814,6 +1724,7 @@
 }).call(this);
 
 (function() {
+  'use strict';
   angular.module('BBAdmin.Services').factory('AdminAddressService', ["$q", "BBModel", function($q, BBModel) {
     return {
       query: function(params) {
@@ -1847,6 +1758,7 @@
 }).call(this);
 
 (function() {
+  'use strict';
   angular.module('BBAdmin.Services').factory('AdminClinicService', ["$q", "BBModel", "ClinicCollections", "$window", function($q, BBModel, ClinicCollections, $window) {
     return {
       query: function(params) {
@@ -1951,6 +1863,7 @@
 }).call(this);
 
 (function() {
+  'use strict';
   angular.module('BBAdminServices').factory('AdminPersonService', ["$q", "$window", "$rootScope", "halClient", "SlotCollections", "BookingCollections", "BBModel", "LoginService", "$log", function($q, $window, $rootScope, halClient, SlotCollections, BookingCollections, BBModel, LoginService, $log) {
     return {
       query: function(params) {
@@ -2033,7 +1946,8 @@
 }).call(this);
 
 (function() {
-  angular.module('BBAdmin.Services').factory('AdminResourceService', ["$q", "UriTemplate", "halClient", "SlotCollections", "BBModel", function($q, UriTemplate, halClient, SlotCollections, BBModel) {
+  'use strict';
+  angular.module('BBAdmin.Services').factory('AdminResourceService', ["$q", "UriTemplate", "halClient", "SlotCollections", "BBModel", "BookingCollections", function($q, UriTemplate, halClient, SlotCollections, BBModel, BookingCollections) {
     return {
       query: function(params) {
         var company, defer;
@@ -2089,6 +2003,7 @@
 }).call(this);
 
 (function() {
+  'use strict';
   angular.module('BBAdmin.Services').factory('AdminScheduleService', ["$q", "BBModel", "ScheduleRules", "BBAssets", function($q, BBModel, ScheduleRules, BBAssets) {
     return {
       query: function(params) {
@@ -2145,12 +2060,6 @@
           };
         })(this));
       },
-      getPeopleScheduleEvents: function(company, start, end) {
-        return this.getAssetsScheduleEvents(company, start, end);
-      },
-      mapPeopleToScheduleEvents: function(start, end, assets) {
-        return this.mapAssetsToScheduleEvents(start, end, assets);
-      },
       mapAssetsToScheduleEvents: function(start, end, assets) {
         var assets_with_schedule;
         assets_with_schedule = _.filter(assets, function(asset) {
@@ -2202,6 +2111,7 @@
 }).call(this);
 
 (function() {
+  'use strict';
   angular.module('BBAdmin.Services').factory('AdminServiceService', ["$q", "BBModel", "$log", function($q, BBModel, $log) {
     return {
       query: function(params) {
@@ -2235,6 +2145,7 @@
 }).call(this);
 
 (function() {
+  'use strict';
   angular.module('BBAdminServices').factory("BB.Service.schedule", ["$q", "BBModel", function($q, BBModel) {
     return {
       unwrap: function(resource) {
