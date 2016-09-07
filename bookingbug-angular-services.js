@@ -1871,7 +1871,7 @@
         company = params.company;
         defer = $q.defer();
         if (company.$has('people')) {
-          company.$get('people').then(function(collection) {
+          company.$get('people', params).then(function(collection) {
             return collection.$get('people').then(function(people) {
               var models, p;
               models = (function() {
@@ -1953,7 +1953,7 @@
         var company, defer;
         company = params.company;
         defer = $q.defer();
-        company.$get('resources').then(function(collection) {
+        company.$get('resources', params).then(function(collection) {
           return collection.$get('resources').then(function(resources) {
             var models, r;
             models = (function() {
@@ -2134,8 +2134,10 @@
             rules = new ScheduleRules(found);
             events = rules.toEvents();
             _.each(events, function(e) {
-              e.resourceId = asset.id;
+              e.resourceId = asset.id + "_" + asset.type[0];
               e.title = asset.name;
+              e.start = moment(e.start);
+              e.end = moment(e.end);
               return e.rendering = "background";
             });
             prom = $q.defer();
@@ -2150,8 +2152,10 @@
               rules = new ScheduleRules(schedules.dates);
               events = rules.toEvents();
               _.each(events, function(e) {
-                e.resourceId = asset.id;
+                e.resourceId = asset.id + "_" + asset.type[0];
                 e.title = asset.name;
+                e.start = moment(e.start);
+                e.end = moment(e.end);
                 return e.rendering = "background";
               });
               return events;
