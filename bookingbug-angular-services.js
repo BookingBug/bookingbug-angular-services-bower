@@ -2172,11 +2172,13 @@
           requested = [];
         }
         if (filtered) {
-          return loadScheduleCaches(requested).then(function() {
-            return $q.all(this.mapAssetsToScheduleEvents(start, end, requested)).then(function(schedules) {
-              return _.flatten(schedules);
-            });
-          });
+          return loadScheduleCaches(requested).then((function(_this) {
+            return function() {
+              return $q.all(_this.mapAssetsToScheduleEvents(start, end, requested)).then(function(schedules) {
+                return _.flatten(schedules);
+              });
+            };
+          })(this));
         } else {
           localMethod = this.mapAssetsToScheduleEvents;
           return BBAssets(company).then(function(assets) {
