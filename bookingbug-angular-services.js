@@ -2005,7 +2005,9 @@
 (function() {
   'use strict';
   angular.module('BBAdmin.Services').factory('AdminScheduleService', function($q, BBModel, ScheduleRules, BBAssets) {
-    return {
+    var cacheDates, getCacheDates, loadScheduleCaches, schedule_cache;
+    schedule_cache = {};
+    ({
       query: function(params) {
         var company, defer;
         company = params.company;
@@ -2059,29 +2061,102 @@
             return deferred.reject(err);
           };
         })(this));
-      },
+      }
+    });
+    cacheDates = function(asset, dates) {
+      var k, name, results, v;
+      schedule_cache[name = asset.self] || (schedule_cache[name] = {});
+      results = [];
+      for (k in dates) {
+        v = dates[k];
+        results.push(schedule_cache[asset.self][k] = v);
+      }
+      return results;
+    };
+    getCacheDates = function(asset, start, end) {
+      var asset_cache, curr, dates, en, st, test;
+      if (!schedule_cache[asset.self]) {
+        return false;
+      }
+      st = moment(start);
+      en = moment(end);
+      curr = moment(start);
+      dates = [];
+      asset_cache = schedule_cache[asset.self];
+      while (curr.unix() < end.unix()) {
+        test = curr.format('YYYY-MM-DD');
+        if (!asset_cache[test]) {
+          return false;
+        }
+        dates[test] = asset_cache[test];
+        curr = curr.add(1, 'day');
+      }
+      return dates;
+    };
+    loadScheduleCaches = function(assets) {
+      var asset, fin, i, len, proms;
+      proms = [];
+      for (i = 0, len = assets.length; i < len; i++) {
+        asset = assets[i];
+        if (asset.$has('immediate_schedule')) {
+          (function(_this) {
+            return (function(asset) {
+              var prom;
+              prom = asset.$get('immediate_schedule');
+              proms.push(prom);
+              return prom.then(function(schedules) {
+                return cacheDates(asset, schedules.dates);
+              });
+            });
+          })(this)(asset);
+        }
+      }
+      fin = $q.defer();
+      if (proms.length > 0) {
+        $q.all(proms).then(function() {
+          return fin.resolve();
+        });
+      } else {
+        fin.resolve();
+      }
+      return fin.promise;
+    };
+    return {
       mapAssetsToScheduleEvents: function(start, end, assets) {
         var assets_with_schedule;
         assets_with_schedule = _.filter(assets, function(asset) {
           return asset.$has('schedule');
         });
         return _.map(assets_with_schedule, function(asset) {
-          var params;
-          params = {
-            start_date: start.format('YYYY-MM-DD'),
-            end_date: end.format('YYYY-MM-DD')
-          };
-          return asset.$get('schedule', params).then(function(schedules) {
-            var events, rules;
-            rules = new ScheduleRules(schedules.dates);
+          var events, found, params, prom, rules;
+          found = getCacheDates(asset, start, end);
+          if (found) {
+            rules = new ScheduleRules(found);
             events = rules.toEvents();
             _.each(events, function(e) {
               e.resourceId = asset.id;
               e.title = asset.name;
               return e.rendering = "background";
             });
-            return events;
-          });
+            prom = $q.defer();
+            prom.resolve(events);
+            return prom.promise;
+          } else {
+            params = {
+              start_date: start.format('YYYY-MM-DD'),
+              end_date: end.format('YYYY-MM-DD')
+            };
+            return asset.$get('schedule', params).then(function(schedules) {
+              rules = new ScheduleRules(schedules.dates);
+              events = rules.toEvents();
+              _.each(events, function(e) {
+                e.resourceId = asset.id;
+                e.title = asset.name;
+                return e.rendering = "background";
+              });
+              return events;
+            });
+          }
         });
       },
       getAssetsScheduleEvents: function(company, start, end, filtered, requested) {
@@ -2093,14 +2168,18 @@
           requested = [];
         }
         if (filtered) {
-          return $q.all(this.mapAssetsToScheduleEvents(start, end, requested)).then(function(schedules) {
-            return _.flatten(schedules);
+          return loadScheduleCaches(requested).then(function() {
+            return $q.all(this.mapAssetsToScheduleEvents(start, end, requested)).then(function(schedules) {
+              return _.flatten(schedules);
+            });
           });
         } else {
           localMethod = this.mapAssetsToScheduleEvents;
           return BBAssets(company).then(function(assets) {
-            return $q.all(localMethod(start, end, assets)).then(function(schedules) {
-              return _.flatten(schedules);
+            return loadScheduleCaches(assets).then(function() {
+              return $q.all(localMethod(start, end, assets)).then(function(schedules) {
+                return _.flatten(schedules);
+              });
             });
           });
         }
