@@ -1872,21 +1872,27 @@
         defer = $q.defer();
         if (company.$has('people')) {
           company.$get('people', params).then(function(collection) {
-            return collection.$get('people').then(function(people) {
-              var models, p;
-              models = (function() {
-                var i, len, results;
-                results = [];
-                for (i = 0, len = people.length; i < len; i++) {
-                  p = people[i];
-                  results.push(new BBModel.Admin.Person(p));
-                }
-                return results;
-              })();
-              return defer.resolve(models);
-            }, function(err) {
-              return defer.reject(err);
-            });
+            var obj;
+            if (collection.$has('people')) {
+              return collection.$get('people').then(function(people) {
+                var models, p;
+                models = (function() {
+                  var i, len, results;
+                  results = [];
+                  for (i = 0, len = people.length; i < len; i++) {
+                    p = people[i];
+                    results.push(new BBModel.Admin.Person(p));
+                  }
+                  return results;
+                })();
+                return defer.resolve(models);
+              }, function(err) {
+                return defer.reject(err);
+              });
+            } else {
+              obj = new BBModel.Admin.Person(collection);
+              return defer.resolve(obj);
+            }
           }, function(err) {
             return defer.reject(err);
           });
