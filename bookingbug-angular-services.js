@@ -2140,7 +2140,7 @@
             rules = new ScheduleRules(found);
             events = rules.toEvents();
             _.each(events, function(e) {
-              e.resourceId = asset.id + "_" + asset.type[0];
+              e.resourceId = parseInt(asset.id) + "_" + asset.type[0];
               e.title = asset.name;
               e.start = moment(e.start);
               e.end = moment(e.end);
@@ -2158,7 +2158,7 @@
               rules = new ScheduleRules(schedules.dates);
               events = rules.toEvents();
               _.each(events, function(e) {
-                e.resourceId = asset.id + "_" + asset.type[0];
+                e.resourceId = parseInt(asset.id) + "_" + asset.type[0];
                 e.title = asset.name;
                 e.start = moment(e.start);
                 e.end = moment(e.end);
