@@ -1203,7 +1203,7 @@
       };
 
       Admin_Resource.$block = function(company, resource, data) {
-        return block(company, resource, data);
+        return AdminResourceService.block(company, resource, data);
       };
 
       return Admin_Resource;
