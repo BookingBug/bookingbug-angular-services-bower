@@ -885,19 +885,17 @@
       * @name setAttendance
       * @methodOf BB.Models:AdminPerson
       * @param {string} status The status of attendance
-      * @param {string} duration The estimated duration
       * @description
       * Set attendance in according of the status parameter
       *
       * @returns {Promise} Returns a promise that rezolve the attendance
        */
 
-      Admin_Person.prototype.setAttendance = function(status, duration) {
+      Admin_Person.prototype.setAttendance = function(status) {
         var defer;
         defer = $q.defer();
         this.$put('attendance', {}, {
-          status: status,
-          estimated_duration: duration
+          status: status
         }).then((function(_this) {
           return function(p) {
             _this.updateModel(p);
@@ -1122,21 +1120,6 @@
 
       Admin_Person.$signup = function(user, data) {
         return AdminPersonService.signup(user, data);
-      };
-
-      Admin_Person.prototype.$refetch = function() {
-        var defer;
-        defer = $q.defer();
-        this.$flush('self');
-        this.$get('self').then((function(_this) {
-          return function(res) {
-            _this.constructor(res);
-            return defer.resolve(_this);
-          };
-        })(this), function(err) {
-          return defer.reject(err);
-        });
-        return defer.promise;
       };
 
       return Admin_Person;
@@ -2362,6 +2345,37 @@
         return deferred.promise;
       }
     };
+  });
+
+}).call(this);
+
+(function() {
+  'use strict';
+  angular.module('BBAdminServices').config(function($translateProvider) {
+    'ngInject';
+    var translations;
+    translations = {
+      SERVICES: {
+        PERSON_TABLE: {
+          NEW_PERSON: 'New Person',
+          DELETE: '@:COMMON.BTN.DELETE',
+          EDIT: '@:COMMON.BTN.EDIT',
+          SCHEDULE: 'Schedule'
+        },
+        RESOURCE_TABLE: {
+          NEW_RESOURCE: 'New Resource',
+          DELETE: '@:COMMON.BTN.DELETE',
+          EDIT: '@:COMMON.BTN.EDIT',
+          SCHEDULE: 'Schedule'
+        },
+        SERVICE_TABLE: {
+          NEW_SERVICE: 'New Service',
+          EDIT: '@:COMMON.BTN.EDIT',
+          PROGRESS_BOOK: '@:COMMON.BTN.BOOK'
+        }
+      }
+    };
+    $translateProvider.translations('en', translations);
   });
 
 }).call(this);
