@@ -885,17 +885,19 @@
       * @name setAttendance
       * @methodOf BB.Models:AdminPerson
       * @param {string} status The status of attendance
+      * @param {string} duration The estimated duration
       * @description
       * Set attendance in according of the status parameter
       *
       * @returns {Promise} Returns a promise that rezolve the attendance
        */
 
-      Admin_Person.prototype.setAttendance = function(status) {
+      Admin_Person.prototype.setAttendance = function(status, duration) {
         var defer;
         defer = $q.defer();
         this.$put('attendance', {}, {
-          status: status
+          status: status,
+          estimated_duration: duration
         }).then((function(_this) {
           return function(p) {
             _this.updateModel(p);
@@ -1120,6 +1122,21 @@
 
       Admin_Person.$signup = function(user, data) {
         return AdminPersonService.signup(user, data);
+      };
+
+      Admin_Person.prototype.$refetch = function() {
+        var defer;
+        defer = $q.defer();
+        this.$flush('self');
+        this.$get('self').then((function(_this) {
+          return function(res) {
+            _this.constructor(res);
+            return defer.resolve(_this);
+          };
+        })(this), function(err) {
+          return defer.reject(err);
+        });
+        return defer.promise;
       };
 
       return Admin_Person;
