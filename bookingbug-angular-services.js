@@ -2,11 +2,16 @@
   'use strict';
   angular.module('BBAdminServices', ['BB', 'BBAdmin.Services', 'BBAdmin.Filters', 'BBAdmin.Controllers', 'trNgGrid', 'ui.calendar']);
 
-  angular.module('BBAdminServices').config(function($logProvider) {
-    return $logProvider.debugEnabled(true);
-  });
-
   angular.module('BBAdminServicesMockE2E', ['BBAdminServices', 'BBAdminMockE2E']);
+
+}).call(this);
+
+(function() {
+  'use strict';
+  angular.module('BBAdminServices').config(function($logProvider) {
+    'ngInject';
+    $logProvider.debugEnabled(true);
+  });
 
 }).call(this);
 
@@ -2362,6 +2367,37 @@
         return deferred.promise;
       }
     };
+  });
+
+}).call(this);
+
+(function() {
+  'use strict';
+  angular.module('BBAdminServices').config(function($translateProvider) {
+    'ngInject';
+    var translations;
+    translations = {
+      SERVICES: {
+        PERSON_TABLE: {
+          NEW_PERSON: 'New Person',
+          DELETE: '@:COMMON.BTN.DELETE',
+          EDIT: '@:COMMON.BTN.EDIT',
+          SCHEDULE: 'Schedule'
+        },
+        RESOURCE_TABLE: {
+          NEW_RESOURCE: 'New Resource',
+          DELETE: '@:COMMON.BTN.DELETE',
+          EDIT: '@:COMMON.BTN.EDIT',
+          SCHEDULE: 'Schedule'
+        },
+        SERVICE_TABLE: {
+          NEW_SERVICE: 'New Service',
+          EDIT: '@:COMMON.BTN.EDIT',
+          PROGRESS_BOOK: '@:COMMON.BTN.BOOK'
+        }
+      }
+    };
+    $translateProvider.translations('en', translations);
   });
 
 }).call(this);
