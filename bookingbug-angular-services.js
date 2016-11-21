@@ -2,21 +2,87 @@
   'use strict';
   angular.module('BBAdminServices', ['BB', 'BBAdmin.Services', 'BBAdmin.Filters', 'BBAdmin.Controllers', 'trNgGrid', 'ui.calendar']);
 
+  angular.module('BBAdminServices').config(function($logProvider) {
+    return $logProvider.debugEnabled(true);
+  });
+
   angular.module('BBAdminServicesMockE2E', ['BBAdminServices', 'BBAdminMockE2E']);
 
 }).call(this);
 
-(function() {
-  'use strict';
-  angular.module('BBAdminServices').config(function($logProvider) {
-    'ngInject';
-    $logProvider.debugEnabled(true);
-  });
+// $.fullCalendar.Grid.prototype.setElement = function(el) {
+//   var noEventClick = this.view.opt('noEventClick');
+//   var _this = this;
 
-}).call(this);
+//   this.el = el
+
+//   // attach a handler to the grid's root element.
+//   this.el.on('mousedown', function(ev) {
+//     if (
+//       (!$(ev.target).is('.fc-event-container *, .fc-more') || noEventClick) && // not an an event element, or "more.." link
+//       !$(ev.target).closest('.fc-popover').length // not on a popover (like the "more.." events one)
+//     ) {
+//       _this.dayMousedown(ev);
+//     }
+//   });
+
+//   // attach event-element-related handlers. in Grid.events
+//   // same garbage collection note as above.
+//   this.bindSegHandlers();
+
+//   this.bindGlobalHandlers();
+
+// }
+
+
+// var FC = $.fullCalendar;
+// var agendaSelectAcrossWeek
+// agendaSelectAcrossWeek = FC.views.agenda['class'].extend({
+
+//   initialize: function() {
+//     FC.views.agenda['class'].prototype.initialize.apply(this);
+//     this.timeGrid.renderSelection = this.renderSelection;
+//   },
+
+//   splitRange: function(range) {
+//     var start = range.start;
+//     var end = range.end;
+//     days = moment.duration(end.diff(start)).days()
+//     return _.map(_.range(days + 1), function(i) {
+//       day = moment(start).add(i, 'days');
+//       return {
+//         start: day.set({'hour': start.hour(), 'minute': start.minute()}),
+//         end: moment(day).set({'hour': end.hour(), 'minute': end.minute()})
+//       };
+//     })
+//   },
+
+//   reportSelection: function(range, ev) {
+//     _.each(this.splitRange(range), function(r) {
+//       FC.views.agenda['class'].prototype.reportSelection.apply(this, [r, ev])
+//     }, this);
+//   },
+
+//   renderSelection: function(range) {
+//     var ranges = this.view.splitRange(range);
+//     if (this.view.opt('selectHelper')) {
+//       _.each(ranges, this.renderRangeHelper, this);
+//     }
+//     else {
+//       segs = _.reduce(ranges, function(s, r) {
+//         return s.concat(this.rangeToSegs(r))
+//       }, [], this);
+//       this.renderFill('highlight', segs);
+//       this.view.trigger('selectx', null, range.start, range.end, null);
+//     }
+//   }
+
+// });
+
+// $.fullCalendar.views.agendaSelectAcrossWeek = agendaSelectAcrossWeek;
+
 
 (function() {
-  'use strict';
   var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
@@ -74,15 +140,12 @@
 }).call(this);
 
 (function() {
-  'use strict';
-  angular.module('BBAdminServices').directive('personTable', function($log, ModalForm, BBModel) {
+  angular.module('BBAdminServices').directive('personTable', function(AdminCompanyService, AdminPerson, $log, ModalForm) {
     var controller, link;
     controller = function($scope) {
       $scope.fields = ['id', 'name', 'mobile'];
       $scope.getPeople = function() {
-        return BBModel.Admin.Person.$query({
-          company: $scope.company
-        }).then(function(people) {
+        return AdminPerson.query($scope.company).then(function(people) {
           return $scope.people = people;
         });
       };
@@ -123,7 +186,7 @@
       if (scope.company) {
         return scope.getPeople();
       } else {
-        return BBModel.Admin.Company.$query(attrs).then(function(company) {
+        return AdminCompanyService.query(attrs).then(function(company) {
           scope.company = company;
           return scope.getPeople();
         });
@@ -139,8 +202,7 @@
 }).call(this);
 
 (function() {
-  'use strict';
-  angular.module('BBAdminServices').directive('resourceTable', function(BBModel, $log, ModalForm) {
+  angular.module('BBAdminServices').directive('resourceTable', function(AdminCompanyService, AdminResourceService, $modal, $log, ModalForm) {
     var controller, link;
     controller = function($scope) {
       $scope.fields = ['id', 'name'];
@@ -149,7 +211,7 @@
         params = {
           company: $scope.company
         };
-        return BBModel.Admin.Resource.$query(params).then(function(resources) {
+        return AdminResourceService.query(params).then(function(resources) {
           return $scope.resources = resources;
         });
       };
@@ -193,7 +255,7 @@
       if (scope.company) {
         return scope.getResources();
       } else {
-        return BBModel.Admin.Company.$query(attrs).then(function(company) {
+        return AdminCompanyService.query(attrs).then(function(company) {
           scope.company = company;
           return scope.getResources();
         });
@@ -209,7 +271,6 @@
 }).call(this);
 
 (function() {
-  'use strict';
   angular.module('BBAdminServices').directive('scheduleCalendar', function(uiCalendarConfig, ScheduleRules) {
     var controller, link;
     controller = function($scope, $attrs) {
@@ -330,7 +391,6 @@
 }).call(this);
 
 (function() {
-  'use strict';
   angular.module('BBAdminServices').directive('scheduleEdit', function() {
     var link;
     link = function(scope, element, attrs, ngModel) {
@@ -361,8 +421,7 @@
 }).call(this);
 
 (function() {
-  'use strict';
-  angular.module('BBAdminServices').directive('scheduleTable', function(BBModel, $log, ModalForm) {
+  angular.module('BBAdminServices').directive('scheduleTable', function(AdminCompanyService, AdminScheduleService, $modal, $log, ModalForm) {
     var controller, link;
     controller = function($scope) {
       $scope.fields = ['id', 'name', 'mobile'];
@@ -371,7 +430,7 @@
         params = {
           company: $scope.company
         };
-        return BBModel.Admin.Schedule.query(params).then(function(schedules) {
+        return AdminScheduleService.query(params).then(function(schedules) {
           return $scope.schedules = schedules;
         });
       };
@@ -406,7 +465,7 @@
       if (scope.company) {
         return scope.getSchedules();
       } else {
-        return BBModel.Admin.Company.query(attrs).then(function(company) {
+        return AdminCompanyService.query(attrs).then(function(company) {
           scope.company = company;
           return scope.getSchedules();
         });
@@ -422,7 +481,6 @@
 }).call(this);
 
 (function() {
-  'use strict';
   angular.module('BBAdminServices').directive('scheduleWeekdays', function(uiCalendarConfig, ScheduleRules) {
     var controller, link;
     controller = function($scope, $attrs) {
@@ -540,8 +598,7 @@
 }).call(this);
 
 (function() {
-  'use strict';
-  angular.module('BBAdminServices').directive('serviceTable', function($uibModal, $log, ModalForm, BBModel) {
+  angular.module('BBAdminServices').directive('serviceTable', function(AdminCompanyService, AdminServiceService, $modal, $log, ModalForm) {
     var controller, link;
     controller = function($scope) {
       $scope.fields = ['id', 'name'];
@@ -550,7 +607,7 @@
         params = {
           company: $scope.company
         };
-        return BBModel.Admin.Service.$query(params).then(function(services) {
+        return AdminServiceService.query(params).then(function(services) {
           return $scope.services = services;
         });
       };
@@ -593,7 +650,7 @@
       if (scope.company) {
         return scope.getServices();
       } else {
-        return BBModel.Admin.Company.query(attrs).then(function(company) {
+        return AdminCompanyService.query(attrs).then(function(company) {
           scope.company = company;
           return scope.getServices();
         });
@@ -618,18 +675,18 @@
   * @description
   * Representation of an Address Object
   *
-  * @property {string} address1 First line of the address
-  * @property {string} address2 Second line of the address
-  * @property {string} address3 Third line of the address
-  * @property {string} address4 Fourth line of the address
-  * @property {string} address5 Fifth line of the address
+  * @property {string} address1 First line of the address 
+  * @property {string} address2 Second line of the address 
+  * @property {string} address3 Third line of the address 
+  * @property {string} address4 Fourth line of the address 
+  * @property {string} address5 Fifth line of the address 
   * @property {string} postcode The Postcode/Zipcode
   * @property {string} country The country
    */
   var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
-  angular.module('BB.Models').factory("AdminAddressModel", function($q, BBModel, BaseModel, AddressModel) {
+  angular.module('BB.Models').factory("Admin.AddressModel", function($q, BBModel, BaseModel, AddressModel) {
 
     /***
     * @ngdoc method
@@ -675,7 +732,7 @@
   * Representation of an Clinic Object
   *
   * @property {string} setTimes Set times for the clinic
-  * @property {string} setResourcesAndPeople Set resources and people for the clinic
+  * @property {string} setResourcesAndPeople Set resources and people for the clinic 
   * @property {object} settings Clinic settings
   * @property {string} resources Clinic resources
   * @property {integer} resource_ids Clinic resources ids
@@ -691,7 +748,7 @@
   var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
-  angular.module('BB.Models').factory("AdminClinicModel", function($q, BBModel, BaseModel, ClinicModel) {
+  angular.module('BB.Models').factory("Admin.ClinicModel", function($q, BBModel, BaseModel, ClinicModel) {
     var Admin_Clinic;
     return Admin_Clinic = (function(superClass) {
       extend(Admin_Clinic, superClass);
@@ -875,14 +932,46 @@
   var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
-  angular.module('BB.Models').factory("AdminPersonModel", function($q, AdminPersonService, BBModel, BaseModel, PersonModel) {
+  angular.module('BB.Models').factory("Admin.PersonModel", function($q, BBModel, BaseModel, PersonModel, AdminPersonService) {
     var Admin_Person;
     return Admin_Person = (function(superClass) {
       extend(Admin_Person, superClass);
 
       function Admin_Person(data) {
         Admin_Person.__super__.constructor.call(this, data);
+        if (!this.queuing_disabled) {
+          this.setCurrentCustomer();
+        }
       }
+
+
+      /***
+      * @ngdoc method
+      * @name setCurrentCustomer
+      * @methodOf BB.Models:AdminPerson
+      * @description
+      * Set current customer
+      *
+      * @returns {Promise} Returns a promise that rezolve the current customer
+       */
+
+      Admin_Person.prototype.setCurrentCustomer = function() {
+        var defer;
+        defer = $q.defer();
+        if (this.$has('queuer')) {
+          this.$get('queuer').then((function(_this) {
+            return function(queuer) {
+              _this.serving = new BBModel.Admin.Queuer(queuer);
+              return defer.resolve(_this.serving);
+            };
+          })(this), function(err) {
+            return defer.reject(err);
+          });
+        } else {
+          defer.resolve();
+        }
+        return defer.promise;
+      };
 
 
       /***
@@ -890,19 +979,17 @@
       * @name setAttendance
       * @methodOf BB.Models:AdminPerson
       * @param {string} status The status of attendance
-      * @param {string} duration The estimated duration
       * @description
       * Set attendance in according of the status parameter
       *
       * @returns {Promise} Returns a promise that rezolve the attendance
        */
 
-      Admin_Person.prototype.setAttendance = function(status, duration) {
+      Admin_Person.prototype.setAttendance = function(status) {
         var defer;
         defer = $q.defer();
         this.$put('attendance', {}, {
-          status: status,
-          estimated_duration: duration
+          status: status
         }).then((function(_this) {
           return function(p) {
             _this.updateModel(p);
@@ -1117,36 +1204,41 @@
         })(this));
       };
 
-      Admin_Person.$query = function(params) {
-        return AdminPersonService.query(params);
-      };
 
-      Admin_Person.$block = function(company, person, data) {
-        return AdminPersonService.block(company, person, data);
-      };
+      /***
+      * @ngdoc method
+      * @name query
+      * @param {Company} company The company model.
+      * @param {integer=} page Specifies particular page of paginated response.
+      * @param {integer=} per_page Number of items per page of paginated response.
+      * @param {string=} filter_by_fields Comma separated list of field, value pairs to filter results by.
+      * @param {string=} order_by Specifies field to order results by.
+      * @param {boolean=} order_by_reverse Reverses the ordered results if true.
+      * @methodOf BB.Models:AdminPerson
+      * @description
+      * Gets a filtered collection of people.
+      *
+      * @returns {Promise} Returns a promise that resolves to the filtered collection of people.
+       */
 
-      Admin_Person.$signup = function(user, data) {
-        return AdminPersonService.signup(user, data);
-      };
-
-      Admin_Person.prototype.$refetch = function() {
-        var defer;
-        defer = $q.defer();
-        this.$flush('self');
-        this.$get('self').then((function(_this) {
-          return function(res) {
-            _this.constructor(res);
-            return defer.resolve(_this);
-          };
-        })(this), function(err) {
-          return defer.reject(err);
+      Admin_Person.query = function(company, page, per_page, filter_by_fields, order_by, order_by_reverse) {
+        return AdminPersonService.query({
+          company: company,
+          page: page,
+          per_page: per_page,
+          filter_by_fields: filter_by_fields,
+          order_by: order_by,
+          order_by_reverse: order_by_reverse
         });
-        return defer.promise;
       };
 
       return Admin_Person;
 
     })(PersonModel);
+  });
+
+  angular.module('BB.Models').factory('AdminPerson', function($injector) {
+    return $injector.get('Admin.PersonModel');
   });
 
 }).call(this);
@@ -1172,7 +1264,7 @@
   var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
-  angular.module('BB.Models').factory("AdminResourceModel", function($q, AdminResourceService, BBModel, BaseModel, ResourceModel) {
+  angular.module('BB.Models').factory("Admin.ResourceModel", function($q, BBModel, BaseModel, ResourceModel) {
     var Admin_Resource;
     return Admin_Resource = (function(superClass) {
       extend(Admin_Resource, superClass);
@@ -1220,14 +1312,6 @@
         return this.availability[str] === "Yes";
       };
 
-      Admin_Resource.$query = function(params) {
-        return AdminResourceService.query(params);
-      };
-
-      Admin_Resource.$block = function(company, resource, data) {
-        return AdminResourceService.block(company, resource, data);
-      };
-
       return Admin_Resource;
 
     })(ResourceModel);
@@ -1254,7 +1338,7 @@
   var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
-  angular.module('BB.Models').factory("AdminScheduleModel", function($q, AdminScheduleService, BBModel, BaseModel, ScheduleRules) {
+  angular.module('BB.Models').factory("Admin.ScheduleModel", function($q, BBModel, BaseModel, ScheduleRules) {
     var Admin_Schedule;
     return Admin_Schedule = (function(superClass) {
       extend(Admin_Schedule, superClass);
@@ -1283,18 +1367,6 @@
         data.company_id = this.company_id;
         data.duration = this.duration;
         return data;
-      };
-
-      Admin_Schedule.$query = function(params) {
-        return AdminScheduleService.query(params);
-      };
-
-      Admin_Schedule.$delete = function(schedule) {
-        return AdminScheduleService["delete"](schedule);
-      };
-
-      Admin_Schedule.$update = function(schedule) {
-        return AdminScheduleService.update(schedule);
       };
 
       return Admin_Schedule;
@@ -1725,7 +1797,7 @@
   var extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
-  angular.module('BB.Models').factory("AdminServiceModel", function($q, AdminServiceService, BBModel, ServiceModel) {
+  angular.module('BB.Models').factory("Admin.ServiceModel", function($q, BBModel, ServiceModel) {
     var Admin_Service;
     return Admin_Service = (function(superClass) {
       extend(Admin_Service, superClass);
@@ -1733,10 +1805,6 @@
       function Admin_Service() {
         return Admin_Service.__super__.constructor.apply(this, arguments);
       }
-
-      Admin_Service.$query = function(params) {
-        return AdminServiceService.query(params);
-      };
 
       return Admin_Service;
 
@@ -1746,7 +1814,6 @@
 }).call(this);
 
 (function() {
-  'use strict';
   angular.module('BBAdmin.Services').factory('AdminAddressService', function($q, BBModel) {
     return {
       query: function(params) {
@@ -1780,7 +1847,6 @@
 }).call(this);
 
 (function() {
-  'use strict';
   angular.module('BBAdmin.Services').factory('AdminClinicService', function($q, BBModel, ClinicCollections, $window) {
     return {
       query: function(params) {
@@ -1885,7 +1951,6 @@
 }).call(this);
 
 (function() {
-  'use strict';
   angular.module('BBAdminServices').factory('AdminPersonService', function($q, $window, $rootScope, halClient, SlotCollections, BookingCollections, BBModel, LoginService, $log) {
     return {
       query: function(params) {
@@ -1893,28 +1958,22 @@
         company = params.company;
         defer = $q.defer();
         if (company.$has('people')) {
-          company.$get('people', params).then(function(collection) {
-            var obj;
-            if (collection.$has('people')) {
-              return collection.$get('people').then(function(people) {
-                var models, p;
-                models = (function() {
-                  var i, len, results;
-                  results = [];
-                  for (i = 0, len = people.length; i < len; i++) {
-                    p = people[i];
-                    results.push(new BBModel.Admin.Person(p));
-                  }
-                  return results;
-                })();
-                return defer.resolve(models);
-              }, function(err) {
-                return defer.reject(err);
-              });
-            } else {
-              obj = new BBModel.Admin.Person(collection);
-              return defer.resolve(obj);
-            }
+          company.$get('people').then(function(collection) {
+            return collection.$get('people').then(function(people) {
+              var models, p;
+              models = (function() {
+                var i, len, results;
+                results = [];
+                for (i = 0, len = people.length; i < len; i++) {
+                  p = people[i];
+                  results.push(new BBModel.Admin.Person(p));
+                }
+                return results;
+              })();
+              return defer.resolve(models);
+            }, function(err) {
+              return defer.reject(err);
+            });
           }, function(err) {
             return defer.reject(err);
           });
@@ -1974,14 +2033,13 @@
 }).call(this);
 
 (function() {
-  'use strict';
-  angular.module('BBAdmin.Services').factory('AdminResourceService', function($q, UriTemplate, halClient, SlotCollections, BBModel, BookingCollections) {
+  angular.module('BBAdmin.Services').factory('AdminResourceService', function($q, UriTemplate, halClient, SlotCollections, BBModel) {
     return {
       query: function(params) {
         var company, defer;
         company = params.company;
         defer = $q.defer();
-        company.$get('resources', params).then(function(collection) {
+        company.$get('resources').then(function(collection) {
           return collection.$get('resources').then(function(resources) {
             var models, r;
             models = (function() {
@@ -2031,11 +2089,8 @@
 }).call(this);
 
 (function() {
-  'use strict';
   angular.module('BBAdmin.Services').factory('AdminScheduleService', function($q, BBModel, ScheduleRules, BBAssets) {
-    var cacheDates, getCacheDates, loadScheduleCaches, schedule_cache;
-    schedule_cache = {};
-    ({
+    return {
       query: function(params) {
         var company, defer;
         company = params.company;
@@ -2089,106 +2144,35 @@
             return deferred.reject(err);
           };
         })(this));
-      }
-    });
-    cacheDates = function(asset, dates) {
-      var k, name, results, v;
-      schedule_cache[name = asset.self] || (schedule_cache[name] = {});
-      results = [];
-      for (k in dates) {
-        v = dates[k];
-        results.push(schedule_cache[asset.self][k] = v);
-      }
-      return results;
-    };
-    getCacheDates = function(asset, start, end) {
-      var asset_cache, curr, dates, en, st, test;
-      if (!schedule_cache[asset.self]) {
-        return false;
-      }
-      st = moment(start);
-      en = moment(end);
-      curr = moment(start);
-      dates = [];
-      asset_cache = schedule_cache[asset.self];
-      while (curr.unix() < end.unix()) {
-        test = curr.format('YYYY-MM-DD');
-        if (!asset_cache[test]) {
-          return false;
-        }
-        dates[test] = asset_cache[test];
-        curr = curr.add(1, 'day');
-      }
-      return dates;
-    };
-    loadScheduleCaches = function(assets) {
-      var asset, fin, i, len, proms;
-      proms = [];
-      for (i = 0, len = assets.length; i < len; i++) {
-        asset = assets[i];
-        if (asset.$has('immediate_schedule')) {
-          (function(_this) {
-            return (function(asset) {
-              var prom;
-              prom = asset.$get('immediate_schedule');
-              proms.push(prom);
-              return prom.then(function(schedules) {
-                return cacheDates(asset, schedules.dates);
-              });
-            });
-          })(this)(asset);
-        }
-      }
-      fin = $q.defer();
-      if (proms.length > 0) {
-        $q.all(proms).then(function() {
-          return fin.resolve();
-        });
-      } else {
-        fin.resolve();
-      }
-      return fin.promise;
-    };
-    return {
+      },
+      getPeopleScheduleEvents: function(company, start, end) {
+        return this.getAssetsScheduleEvents(company, start, end);
+      },
+      mapPeopleToScheduleEvents: function(start, end, assets) {
+        return this.mapAssetsToScheduleEvents(start, end, assets);
+      },
       mapAssetsToScheduleEvents: function(start, end, assets) {
         var assets_with_schedule;
         assets_with_schedule = _.filter(assets, function(asset) {
           return asset.$has('schedule');
         });
         return _.map(assets_with_schedule, function(asset) {
-          var events, found, params, prom, rules;
-          found = getCacheDates(asset, start, end);
-          if (found) {
-            rules = new ScheduleRules(found);
+          var params;
+          params = {
+            start_date: start.format('YYYY-MM-DD'),
+            end_date: end.format('YYYY-MM-DD')
+          };
+          return asset.$get('schedule', params).then(function(schedules) {
+            var events, rules;
+            rules = new ScheduleRules(schedules.dates);
             events = rules.toEvents();
             _.each(events, function(e) {
-              e.resourceId = parseInt(asset.id) + "_" + asset.type[0];
+              e.resourceId = asset.id;
               e.title = asset.name;
-              e.start = moment(e.start);
-              e.end = moment(e.end);
               return e.rendering = "background";
             });
-            prom = $q.defer();
-            prom.resolve(events);
-            return prom.promise;
-          } else {
-            params = {
-              start_date: start.format('YYYY-MM-DD'),
-              end_date: end.format('YYYY-MM-DD')
-            };
-            return asset.$get('schedule', params).then(function(schedules) {
-              rules = new ScheduleRules(schedules.dates);
-              events = rules.toEvents();
-              _.each(events, function(e) {
-                e.resourceId = parseInt(asset.id) + "_" + asset.type[0];
-                e.title = asset.name;
-                e.start = moment(e.start);
-                e.end = moment(e.end);
-                return e.rendering = "background";
-              });
-              return events;
-            });
-          }
+            return events;
+          });
         });
       },
       getAssetsScheduleEvents: function(company, start, end, filtered, requested) {
@@ -2200,20 +2184,14 @@
           requested = [];
         }
         if (filtered) {
-          return loadScheduleCaches(requested).then((function(_this) {
-            return function() {
-              return $q.all(_this.mapAssetsToScheduleEvents(start, end, requested)).then(function(schedules) {
-                return _.flatten(schedules);
-              });
-            };
-          })(this));
+          return $q.all(this.mapAssetsToScheduleEvents(start, end, requested)).then(function(schedules) {
+            return _.flatten(schedules);
+          });
         } else {
           localMethod = this.mapAssetsToScheduleEvents;
           return BBAssets(company).then(function(assets) {
-            return loadScheduleCaches(assets).then(function() {
-              return $q.all(localMethod(start, end, assets)).then(function(schedules) {
-                return _.flatten(schedules);
-              });
+            return $q.all(localMethod(start, end, assets)).then(function(schedules) {
+              return _.flatten(schedules);
             });
           });
         }
@@ -2224,7 +2202,6 @@
 }).call(this);
 
 (function() {
-  'use strict';
   angular.module('BBAdmin.Services').factory('AdminServiceService', function($q, BBModel, $log) {
     return {
       query: function(params) {
@@ -2258,7 +2235,6 @@
 }).call(this);
 
 (function() {
-  'use strict';
   angular.module('BBAdminServices').factory("BB.Service.schedule", function($q, BBModel) {
     return {
       unwrap: function(resource) {
