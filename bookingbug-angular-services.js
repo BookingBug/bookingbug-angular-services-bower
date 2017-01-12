@@ -2209,7 +2209,7 @@
           })(this));
         } else {
           localMethod = this.mapAssetsToScheduleEvents;
-          return BBAssets(company).then(function(assets) {
+          return BBAssets.getAssets(company).then(function(assets) {
             return loadScheduleCaches(assets).then(function() {
               return $q.all(localMethod(start, end, assets)).then(function(schedules) {
                 return _.flatten(schedules);
