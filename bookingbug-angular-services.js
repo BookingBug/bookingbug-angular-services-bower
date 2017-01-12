@@ -2209,7 +2209,7 @@
           })(this));
         } else {
           localMethod = this.mapAssetsToScheduleEvents;
-          return BBAssets.getAssets(company).then(function(assets) {
+          return BBAssets(company).then(function(assets) {
             return loadScheduleCaches(assets).then(function() {
               return $q.all(localMethod(start, end, assets)).then(function(schedules) {
                 return _.flatten(schedules);
@@ -2367,6 +2367,37 @@
         return deferred.promise;
       }
     };
+  });
+
+}).call(this);
+
+(function() {
+  "use strict";
+  angular.module("BBAdminServices").config(function($translateProvider) {
+    "ngInject";
+    var translations;
+    translations = {
+      SERVICES: {
+        PERSON_TABLE: {
+          NEW_PERSON: "New Person",
+          DELETE: "@:COMMON.BTN.DELETE",
+          EDIT: "@:COMMON.BTN.EDIT",
+          SCHEDULE: "@:COMMON.TERMINOLOGY.SCHEDULE"
+        },
+        RESOURCE_TABLE: {
+          NEW_RESOURCE: "New Resource",
+          DELETE: "@:COMMON.BTN.DELETE",
+          EDIT: "@:COMMON.BTN.EDIT",
+          SCHEDULE: "@:COMMON.TERMINOLOGY.SCHEDULE"
+        },
+        SERVICE_TABLE: {
+          NEW_SERVICE: "New Service",
+          EDIT: "@:COMMON.BTN.EDIT",
+          BOOK_BTN: "@:COMMON.BTN.BOOK"
+        }
+      }
+    };
+    $translateProvider.translations("en", translations);
   });
 
 }).call(this);
