@@ -1669,7 +1669,7 @@
 
       ScheduleRules.prototype.filterRulesByDates = function() {
         return _.pick(this.rules, function(value, key) {
-          return key.match(/^\d{4}-\d{2}-\d{2}$/) && value !== "None";
+          return key.match(/^\d{4}-\d{2}-\d{2}$/);
         });
       };
 
@@ -1695,7 +1695,7 @@
       * @ngdoc method
       * @name formatTime
       * @methodOf BB.Models:ScheduleRules
-      * @param {date=} time The time
+      * @param {date=} time The time 
       * @description
       * Format the time in according of the time parameter
       *
@@ -1711,7 +1711,7 @@
       * @ngdoc method
       * @name toEvents
       * @methodOf BB.Models:ScheduleRules
-      * @param {array} d The day of events
+      * @param {array} d The day of events 
       * @description
       * Go to events day
       *
@@ -1719,7 +1719,7 @@
        */
 
       ScheduleRules.prototype.toEvents = function(d) {
-        if (d && this.rules[d] !== "None") {
+        if (d) {
           return _.map(this.rules[d], (function(_this) {
             return function(range) {
               return {
