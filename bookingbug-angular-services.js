@@ -241,8 +241,8 @@ angular.module('BBAdminServices').directive('scheduleCalendar', function (uiCale
         }];
 
         $scope.getCalendarEvents = function (start, end) {
-            var events = void 0;
-            return events = uiCalendarConfig.calendars.scheduleCal.fullCalendar('clientEvents', function (e) {
+
+            return uiCalendarConfig.calendars.scheduleCal.fullCalendar('clientEvents', function (e) {
                 return (start.isAfter(e.start) || start.isSame(e.start)) && (end.isBefore(e.end) || end.isSame(e.end));
             });
         };
@@ -464,8 +464,7 @@ angular.module('BBAdminServices').directive('scheduleWeekdays', function (uiCale
         }];
 
         $scope.getCalendarEvents = function (start, end) {
-            var events = void 0;
-            return events = uiCalendarConfig.calendars.scheduleWeekdays.fullCalendar('clientEvents', function (e) {
+            return uiCalendarConfig.calendars.scheduleWeekdays.fullCalendar('clientEvents', function (e) {
                 return (start.isAfter(e.start) || start.isSame(e.start)) && (end.isBefore(e.end) || end.isSame(e.end));
             });
         };
@@ -2086,8 +2085,7 @@ angular.module('BBAdmin.Services').factory('AdminScheduleService', function ($q,
         if (!schedule_cache[asset.self]) {
             return false;
         }
-        var st = moment(start);
-        var en = moment(end);
+
         var curr = moment(start);
         var dates = [];
 
@@ -2153,7 +2151,6 @@ angular.module('BBAdmin.Services').factory('AdminScheduleService', function ($q,
 
     return {
         query: function query(params) {
-            console.log('damn');
             var company = params.company;
 
             var defer = $q.defer();
@@ -2172,7 +2169,6 @@ angular.module('BBAdmin.Services').factory('AdminScheduleService', function ($q,
             return defer.promise;
         },
         delete: function _delete(schedule) {
-            console.log('damn');
             var deferred = $q.defer();
             schedule.$del('self').then(function (schedule) {
                 schedule = new BBModel.Admin.Schedule(schedule);
@@ -2184,7 +2180,6 @@ angular.module('BBAdmin.Services').factory('AdminScheduleService', function ($q,
             return deferred.promise;
         },
         update: function update(schedule) {
-            console.log('damn');
             var deferred = $q.defer();
             return schedule.$put('self', {}, schedule.getPostData()).then(function (c) {
                 schedule = new BBModel.Admin.Schedule(c);
