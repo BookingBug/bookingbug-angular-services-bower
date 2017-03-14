@@ -12,10 +12,6 @@ angular.module('BBAdminServices').config(function ($logProvider) {
 });
 "use strict";
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
-
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -28,52 +24,50 @@ window.Collection.Clinic = function (_window$Collection$Ba) {
     function Clinic() {
         _classCallCheck(this, Clinic);
 
-        return _possibleConstructorReturn(this, (Clinic.__proto__ || Object.getPrototypeOf(Clinic)).apply(this, arguments));
+        return _possibleConstructorReturn(this, _window$Collection$Ba.apply(this, arguments));
     }
 
-    _createClass(Clinic, [{
-        key: "checkItem",
-        value: function checkItem(item) {
-            return _get(Clinic.prototype.__proto__ || Object.getPrototypeOf(Clinic.prototype), "checkItem", this).apply(this, arguments);
+    Clinic.prototype.checkItem = function checkItem(item) {
+        var _window$Collection$Ba2;
+
+        return (_window$Collection$Ba2 = _window$Collection$Ba.prototype.checkItem).call.apply(_window$Collection$Ba2, [this].concat(Array.prototype.slice.call(arguments)));
+    };
+
+    Clinic.prototype.matchesParams = function matchesParams(item) {
+        if (this.params.start_time) {
+            if (!this.start_time) {
+                this.start_time = moment(this.params.start_time);
+            }
+            if (this.start_time.isAfter(item.start_time)) {
+                return false;
+            }
         }
-    }, {
-        key: "matchesParams",
-        value: function matchesParams(item) {
-            if (this.params.start_time) {
-                if (!this.start_time) {
-                    this.start_time = moment(this.params.start_time);
-                }
-                if (this.start_time.isAfter(item.start_time)) {
-                    return false;
-                }
+        if (this.params.end_time) {
+            if (!this.end_time) {
+                this.end_time = moment(this.params.end_time);
             }
-            if (this.params.end_time) {
-                if (!this.end_time) {
-                    this.end_time = moment(this.params.end_time);
-                }
-                if (this.end_time.isBefore(item.end_time)) {
-                    return false;
-                }
+            if (this.end_time.isBefore(item.end_time)) {
+                return false;
             }
-            if (this.params.start_date) {
-                if (!this.start_date) {
-                    this.start_date = moment(this.params.start_date);
-                }
-                if (this.start_date.isAfter(item.start_date)) {
-                    return false;
-                }
-            }
-            if (this.params.end_date) {
-                if (!this.end_date) {
-                    this.end_date = moment(this.params.end_date);
-                }
-                if (this.end_date.isBefore(item.end_date)) {
-                    return false;
-                }
-            }
-            return true;
         }
-    }]);
+        if (this.params.start_date) {
+            if (!this.start_date) {
+                this.start_date = moment(this.params.start_date);
+            }
+            if (this.start_date.isAfter(item.start_date)) {
+                return false;
+            }
+        }
+        if (this.params.end_date) {
+            if (!this.end_date) {
+                this.end_date = moment(this.params.end_date);
+            }
+            if (this.end_date.isBefore(item.end_date)) {
+                return false;
+            }
+        }
+        return true;
+    };
 
     return Clinic;
 }(window.Collection.Base);
@@ -643,8 +637,6 @@ angular.module('BBAdminServices').directive('serviceTable', function ($uibModal,
 });
 "use strict";
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -687,30 +679,25 @@ angular.module('BB.Models').factory("AdminAddressModel", function ($q, BBModel, 
             function Admin_Address() {
                 _classCallCheck(this, Admin_Address);
 
-                return _possibleConstructorReturn(this, (Admin_Address.__proto__ || Object.getPrototypeOf(Admin_Address)).apply(this, arguments));
+                return _possibleConstructorReturn(this, _AddressModel.apply(this, arguments));
             }
 
-            _createClass(Admin_Address, [{
-                key: "distanceFrom",
-                value: function distanceFrom(address, options) {
+            Admin_Address.prototype.distanceFrom = function distanceFrom(address, options) {
 
-                    if (!this.dists) {
-                        this.dists = [];
-                    }
-                    if (!this.dists[address]) {
-                        this.dists[address] = Math.round(Math.random() * 50, 0);
-                    }
-                    return this.dists[address];
+                if (!this.dists) {
+                    this.dists = [];
                 }
-            }]);
+                if (!this.dists[address]) {
+                    this.dists[address] = Math.round(Math.random() * 50, 0);
+                }
+                return this.dists[address];
+            };
 
             return Admin_Address;
         }(AddressModel)
     );
 });
 "use strict";
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -747,7 +734,7 @@ angular.module('BB.Models').factory("AdminClinicModel", function ($q, BBModel, B
         function Admin_Clinic(data) {
             _classCallCheck(this, Admin_Clinic);
 
-            var _this = _possibleConstructorReturn(this, (Admin_Clinic.__proto__ || Object.getPrototypeOf(Admin_Clinic)).call(this, data));
+            var _this = _possibleConstructorReturn(this, _ClinicModel.call(this, data));
 
             if (!_this.repeat_rule) {
                 _this.repeat_rule = {};
@@ -769,150 +756,142 @@ angular.module('BB.Models').factory("AdminClinicModel", function ($q, BBModel, B
          */
 
 
-        _createClass(Admin_Clinic, [{
-            key: "calcRepeatRule",
-            value: function calcRepeatRule() {
-                var en = void 0;
-                var vals = {};
-                vals.name = this.name;
-                vals.start_time = this.start_time.format("HH:mm");
-                vals.end_time = this.end_time.format("HH:mm");
-                vals.address_id = this.address_id;
-                vals.resource_ids = [];
-                for (var id in this.resources) {
-                    en = this.resources[id];
-                    if (en) {
-                        vals.resource_ids.push(id);
-                    }
+        Admin_Clinic.prototype.calcRepeatRule = function calcRepeatRule() {
+            var en = void 0;
+            var vals = {};
+            vals.name = this.name;
+            vals.start_time = this.start_time.format("HH:mm");
+            vals.end_time = this.end_time.format("HH:mm");
+            vals.address_id = this.address_id;
+            vals.resource_ids = [];
+            for (var id in this.resources) {
+                en = this.resources[id];
+                if (en) {
+                    vals.resource_ids.push(id);
                 }
-                vals.person_ids = [];
-                for (id in this.people) {
-                    en = this.people[id];
-                    if (en) {
-                        vals.person_ids.push(id);
-                    }
+            }
+            vals.person_ids = [];
+            for (id in this.people) {
+                en = this.people[id];
+                if (en) {
+                    vals.person_ids.push(id);
                 }
-                vals.service_ids = [];
-                for (id in this.services) {
-                    en = this.services[id];
-                    if (en) {
-                        vals.service_ids.push(id);
-                    }
+            }
+            vals.service_ids = [];
+            for (id in this.services) {
+                en = this.services[id];
+                if (en) {
+                    vals.service_ids.push(id);
                 }
-
-                this.repeat_rule.properties = vals;
-                return this.repeat_rule;
             }
 
-            /***
-             * @ngdoc method
-             * @name getPostData
-             * @methodOf BB.Models:AdminClinic
-             * @description
-             * Get post data
-             *
-             * @returns {array} Returns an array with data
-             */
+            this.repeat_rule.properties = vals;
+            return this.repeat_rule;
+        };
 
-        }, {
-            key: "getPostData",
-            value: function getPostData() {
-                var en = void 0;
-                var data = {};
-                data.name = this.name;
-                data.repeat_rule = this.repeat_rule;
-                data.start_time = this.start_time;
-                data.end_time = this.end_time;
-                data.resource_ids = [];
-                data.update_for_repeat = this.update_for_repeat;
-                for (var id in this.resources) {
-                    en = this.resources[id];
-                    if (en) {
-                        data.resource_ids.push(id);
-                    }
+        /***
+         * @ngdoc method
+         * @name getPostData
+         * @methodOf BB.Models:AdminClinic
+         * @description
+         * Get post data
+         *
+         * @returns {array} Returns an array with data
+         */
+
+
+        Admin_Clinic.prototype.getPostData = function getPostData() {
+            var en = void 0;
+            var data = {};
+            data.name = this.name;
+            data.repeat_rule = this.repeat_rule;
+            data.start_time = this.start_time;
+            data.end_time = this.end_time;
+            data.resource_ids = [];
+            data.update_for_repeat = this.update_for_repeat;
+            for (var id in this.resources) {
+                en = this.resources[id];
+                if (en) {
+                    data.resource_ids.push(id);
                 }
-                data.person_ids = [];
-                for (id in this.people) {
-                    en = this.people[id];
-                    if (en) {
-                        data.person_ids.push(id);
-                    }
-                }
-                data.service_ids = [];
-                for (id in this.services) {
-                    en = this.services[id];
-                    if (en) {
-                        data.service_ids.push(id);
-                    }
-                }
-                if (this.address) {
-                    data.address_id = this.address.id;
-                }
-                if (this.settings) {
-                    data.settings = this.settings;
-                }
-                if (this.repeat_rule && this.repeat_rule.rules && this.repeat_rule.rules.frequency) {
-                    data.repeat_rule = this.calcRepeatRule();
-                }
-                return data;
             }
-
-            /***
-             * @ngdoc method
-             * @name save
-             * @methodOf BB.Models:AdminClinic
-             * @description
-             * Save person id, resource id and service id
-             *
-             * @returns {array} Returns an array with resources and peoples
-             */
-
-        }, {
-            key: "save",
-            value: function save() {
-                var _this2 = this;
-
-                this.person_ids = _.compact(_.map(this.people, function (present, person_id) {
-                    if (present) {
-                        return person_id;
-                    }
-                }));
-                this.resource_ids = _.compact(_.map(this.resources, function (present, resource_id) {
-                    if (present) {
-                        return resource_id;
-                    }
-                }));
-                this.service_ids = _.compact(_.map(this.services, function (present, service_id) {
-                    if (present) {
-                        return service_id;
-                    }
-                }));
-                return this.$put('self', {}, this).then(function (clinic) {
-                    _this2.updateModel(clinic);
-                    _this2.setTimes();
-                    return _this2.setResourcesAndPeople();
-                });
-            }
-        }, {
-            key: "$update",
-            value: function $update(data) {
-                var _this3 = this;
-
-                if (!data) {
-                    data = this;
+            data.person_ids = [];
+            for (id in this.people) {
+                en = this.people[id];
+                if (en) {
+                    data.person_ids.push(id);
                 }
-                return this.$put('self', {}, data).then(function (res) {
-                    return _this3.constructor(res);
-                });
             }
-        }]);
+            data.service_ids = [];
+            for (id in this.services) {
+                en = this.services[id];
+                if (en) {
+                    data.service_ids.push(id);
+                }
+            }
+            if (this.address) {
+                data.address_id = this.address.id;
+            }
+            if (this.settings) {
+                data.settings = this.settings;
+            }
+            if (this.repeat_rule && this.repeat_rule.rules && this.repeat_rule.rules.frequency) {
+                data.repeat_rule = this.calcRepeatRule();
+            }
+            return data;
+        };
+
+        /***
+         * @ngdoc method
+         * @name save
+         * @methodOf BB.Models:AdminClinic
+         * @description
+         * Save person id, resource id and service id
+         *
+         * @returns {array} Returns an array with resources and peoples
+         */
+
+
+        Admin_Clinic.prototype.save = function save() {
+            var _this2 = this;
+
+            this.person_ids = _.compact(_.map(this.people, function (present, person_id) {
+                if (present) {
+                    return person_id;
+                }
+            }));
+            this.resource_ids = _.compact(_.map(this.resources, function (present, resource_id) {
+                if (present) {
+                    return resource_id;
+                }
+            }));
+            this.service_ids = _.compact(_.map(this.services, function (present, service_id) {
+                if (present) {
+                    return service_id;
+                }
+            }));
+            return this.$put('self', {}, this).then(function (clinic) {
+                _this2.updateModel(clinic);
+                _this2.setTimes();
+                return _this2.setResourcesAndPeople();
+            });
+        };
+
+        Admin_Clinic.prototype.$update = function $update(data) {
+            var _this3 = this;
+
+            if (!data) {
+                data = this;
+            }
+            return this.$put('self', {}, data).then(function (res) {
+                return _this3.constructor(res);
+            });
+        };
 
         return Admin_Clinic;
     }(ClinicModel);
 });
 'use strict';
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -941,7 +920,7 @@ angular.module('BB.Models').factory("AdminPersonModel", function ($q, AdminPerso
         function Admin_Person(data) {
             _classCallCheck(this, Admin_Person);
 
-            return _possibleConstructorReturn(this, (Admin_Person.__proto__ || Object.getPrototypeOf(Admin_Person)).call(this, data));
+            return _possibleConstructorReturn(this, _PersonModel.call(this, data));
         }
 
         /***
@@ -957,254 +936,239 @@ angular.module('BB.Models').factory("AdminPersonModel", function ($q, AdminPerso
          */
 
 
-        _createClass(Admin_Person, [{
-            key: 'setAttendance',
-            value: function setAttendance(status, duration) {
-                var _this2 = this;
+        Admin_Person.prototype.setAttendance = function setAttendance(status, duration) {
+            var _this2 = this;
 
-                var defer = $q.defer();
-                this.$put('attendance', {}, { status: status, estimated_duration: duration }).then(function (p) {
-                    _this2.updateModel(p);
-                    return defer.resolve(_this2);
+            var defer = $q.defer();
+            this.$put('attendance', {}, { status: status, estimated_duration: duration }).then(function (p) {
+                _this2.updateModel(p);
+                return defer.resolve(_this2);
+            }, function (err) {
+                return defer.reject(err);
+            });
+            return defer.promise;
+        };
+
+        /***
+         * @ngdoc method
+         * @name finishServing
+         * @methodOf BB.Models:AdminPerson
+         * @description
+         * Finish serving
+         *
+         * @returns {Promise} Returns a promise that rezolve the finish serving
+         */
+
+
+        Admin_Person.prototype.finishServing = function finishServing() {
+            var _this3 = this;
+
+            var defer = $q.defer();
+            if (this.$has('finish_serving')) {
+                this.$flush('self');
+                this.$post('finish_serving').then(function (q) {
+                    _this3.$get('self').then(function (p) {
+                        return _this3.updateModel(p);
+                    });
+                    _this3.serving = null;
+                    return defer.resolve(q);
                 }, function (err) {
                     return defer.reject(err);
                 });
-                return defer.promise;
+            } else {
+                defer.reject('finish_serving link not available');
+            }
+            return defer.promise;
+        };
+
+        /***
+         * @ngdoc method
+         * @name isAvailable
+         * @methodOf BB.Models:AdminPerson
+         * @param {date=} start The start date format of the availability schedule
+         * @param {date=} end The end date format of the availability schedule
+         * @description
+         * Look up a schedule for a time range to see if this available.
+         *
+         * @returns {string} Returns yes if schedule is available or not.
+         */
+        // look up a schedule for a time range to see if this available
+        // currently just checks the date - but chould really check the time too
+
+
+        Admin_Person.prototype.isAvailable = function isAvailable(start, end) {
+            var _this4 = this;
+
+            var str = start.format("YYYY-MM-DD") + "-" + end.format("YYYY-MM-DD");
+            if (!this.availability) {
+                this.availability = {};
             }
 
-            /***
-             * @ngdoc method
-             * @name finishServing
-             * @methodOf BB.Models:AdminPerson
-             * @description
-             * Finish serving
-             *
-             * @returns {Promise} Returns a promise that rezolve the finish serving
-             */
-
-        }, {
-            key: 'finishServing',
-            value: function finishServing() {
-                var _this3 = this;
-
-                var defer = $q.defer();
-                if (this.$has('finish_serving')) {
-                    this.$flush('self');
-                    this.$post('finish_serving').then(function (q) {
-                        _this3.$get('self').then(function (p) {
-                            return _this3.updateModel(p);
-                        });
-                        _this3.serving = null;
-                        return defer.resolve(q);
-                    }, function (err) {
-                        return defer.reject(err);
-                    });
-                } else {
-                    defer.reject('finish_serving link not available');
-                }
-                return defer.promise;
-            }
-
-            /***
-             * @ngdoc method
-             * @name isAvailable
-             * @methodOf BB.Models:AdminPerson
-             * @param {date=} start The start date format of the availability schedule
-             * @param {date=} end The end date format of the availability schedule
-             * @description
-             * Look up a schedule for a time range to see if this available.
-             *
-             * @returns {string} Returns yes if schedule is available or not.
-             */
-            // look up a schedule for a time range to see if this available
-            // currently just checks the date - but chould really check the time too
-
-        }, {
-            key: 'isAvailable',
-            value: function isAvailable(start, end) {
-                var _this4 = this;
-
-                var str = start.format("YYYY-MM-DD") + "-" + end.format("YYYY-MM-DD");
-                if (!this.availability) {
-                    this.availability = {};
-                }
-
-                if (this.availability[str]) {
-                    return this.availability[str] === "Yes";
-                }
-                this.availability[str] = "-";
-
-                if (this.$has('schedule')) {
-                    this.$get('schedule', {
-                        start_date: start.format("YYYY-MM-DD"),
-                        end_date: end.format("YYYY-MM-DD")
-                    }).then(function (sched) {
-                        _this4.availability[str] = "No";
-                        if (sched && sched.dates && sched.dates[start.format("YYYY-MM-DD")] && sched.dates[start.format("YYYY-MM-DD")] !== "None") {
-                            return _this4.availability[str] = "Yes";
-                        }
-                    });
-                } else {
-                    this.availability[str] = "Yes";
-                }
-
+            if (this.availability[str]) {
                 return this.availability[str] === "Yes";
             }
+            this.availability[str] = "-";
 
-            /***
-             * @ngdoc method
-             * @name startServing
-             * @methodOf BB.Models:AdminPerson
-             * @param {string=} queuer The queuer of the company.
-             * @description
-             * Start serving in according of the queuer parameter
-             *
-             * @returns {Promise} Returns a promise that rezolve the start serving link
-             */
-
-        }, {
-            key: 'startServing',
-            value: function startServing(queuer) {
-                var _this5 = this;
-
-                var defer = $q.defer();
-                if (this.$has('start_serving')) {
-                    this.$flush('self');
-                    var params = { queuer_id: queuer ? queuer.id : null };
-                    this.$post('start_serving', params).then(function (q) {
-                        _this5.$get('self').then(function (p) {
-                            return _this5.updateModel(p);
-                        });
-                        _this5.serving = q;
-                        return defer.resolve(q);
-                    }, function (err) {
-                        return defer.reject(err);
-                    });
-                } else {
-                    defer.reject('start_serving link not available');
-                }
-                return defer.promise;
-            }
-
-            /***
-             * @ngdoc method
-             * @name getQueuers
-             * @methodOf BB.Models:AdminPerson
-             * @description
-             * Get the queuers
-             *
-             * @returns {Promise} Returns a promise that rezolve the queuer links
-             */
-
-        }, {
-            key: 'getQueuers',
-            value: function getQueuers() {
-                var _this6 = this;
-
-                var defer = $q.defer();
-                if (this.$has('queuers')) {
-                    this.$flush('queuers');
-                    this.$get('queuers').then(function (collection) {
-                        return collection.$get('queuers').then(function (queuers) {
-                            var models = Array.from(queuers).map(function (q) {
-                                return new BBModel.Admin.Queuer(q);
-                            });
-                            _this6.queuers = models;
-                            return defer.resolve(models);
-                        }, function (err) {
-                            return defer.reject(err);
-                        });
-                    }, function (err) {
-                        return defer.reject(err);
-                    });
-                } else {
-                    defer.reject('queuers link not available');
-                }
-                return defer.promise;
-            }
-
-            /***
-             * @ngdoc method
-             * @name getPostData
-             * @methodOf BB.Models:AdminPerson
-             * @description
-             * Get post data
-             *
-             * @returns {array} Returns data
-             */
-
-        }, {
-            key: 'getPostData',
-            value: function getPostData() {
-                var data = {};
-                data.id = this.id;
-                data.name = this.name;
-                data.extra = this.extra;
-                data.description = this.description;
-                return data;
-            }
-
-            /***
-             * @ngdoc method
-             * @name update
-             * @methodOf BB.Models:AdminPerson
-             * @param {object} data The company data
-             * @description
-             * Update the data in according of the data parameter
-             *
-             * @returns {array} Returns the updated array
-             */
-
-        }, {
-            key: '$update',
-            value: function $update(data) {
-                var _this7 = this;
-
-                if (!data) {
-                    data = this.getPostData();
-                }
-                return this.$put('self', {}, data).then(function (res) {
-                    return _this7.constructor(res);
+            if (this.$has('schedule')) {
+                this.$get('schedule', {
+                    start_date: start.format("YYYY-MM-DD"),
+                    end_date: end.format("YYYY-MM-DD")
+                }).then(function (sched) {
+                    _this4.availability[str] = "No";
+                    if (sched && sched.dates && sched.dates[start.format("YYYY-MM-DD")] && sched.dates[start.format("YYYY-MM-DD")] !== "None") {
+                        return _this4.availability[str] = "Yes";
+                    }
                 });
+            } else {
+                this.availability[str] = "Yes";
             }
-        }, {
-            key: '$refetch',
-            value: function $refetch() {
-                var _this8 = this;
 
-                var defer = $q.defer();
+            return this.availability[str] === "Yes";
+        };
+
+        /***
+         * @ngdoc method
+         * @name startServing
+         * @methodOf BB.Models:AdminPerson
+         * @param {string=} queuer The queuer of the company.
+         * @description
+         * Start serving in according of the queuer parameter
+         *
+         * @returns {Promise} Returns a promise that rezolve the start serving link
+         */
+
+
+        Admin_Person.prototype.startServing = function startServing(queuer) {
+            var _this5 = this;
+
+            var defer = $q.defer();
+            if (this.$has('start_serving')) {
                 this.$flush('self');
-                this.$get('self').then(function (res) {
-                    _this8.constructor(res);
-                    return defer.resolve(_this8);
+                var params = { queuer_id: queuer ? queuer.id : null };
+                this.$post('start_serving', params).then(function (q) {
+                    _this5.$get('self').then(function (p) {
+                        return _this5.updateModel(p);
+                    });
+                    _this5.serving = q;
+                    return defer.resolve(q);
                 }, function (err) {
                     return defer.reject(err);
                 });
-                return defer.promise;
+            } else {
+                defer.reject('start_serving link not available');
             }
-        }], [{
-            key: '$query',
-            value: function $query(params) {
-                return AdminPersonService.query(params);
+            return defer.promise;
+        };
+
+        /***
+         * @ngdoc method
+         * @name getQueuers
+         * @methodOf BB.Models:AdminPerson
+         * @description
+         * Get the queuers
+         *
+         * @returns {Promise} Returns a promise that rezolve the queuer links
+         */
+
+
+        Admin_Person.prototype.getQueuers = function getQueuers() {
+            var _this6 = this;
+
+            var defer = $q.defer();
+            if (this.$has('queuers')) {
+                this.$flush('queuers');
+                this.$get('queuers').then(function (collection) {
+                    return collection.$get('queuers').then(function (queuers) {
+                        var models = Array.from(queuers).map(function (q) {
+                            return new BBModel.Admin.Queuer(q);
+                        });
+                        _this6.queuers = models;
+                        return defer.resolve(models);
+                    }, function (err) {
+                        return defer.reject(err);
+                    });
+                }, function (err) {
+                    return defer.reject(err);
+                });
+            } else {
+                defer.reject('queuers link not available');
             }
-        }, {
-            key: '$block',
-            value: function $block(company, person, data) {
-                return AdminPersonService.block(company, person, data);
+            return defer.promise;
+        };
+
+        /***
+         * @ngdoc method
+         * @name getPostData
+         * @methodOf BB.Models:AdminPerson
+         * @description
+         * Get post data
+         *
+         * @returns {array} Returns data
+         */
+
+
+        Admin_Person.prototype.getPostData = function getPostData() {
+            var data = {};
+            data.id = this.id;
+            data.name = this.name;
+            data.extra = this.extra;
+            data.description = this.description;
+            return data;
+        };
+
+        /***
+         * @ngdoc method
+         * @name update
+         * @methodOf BB.Models:AdminPerson
+         * @param {object} data The company data
+         * @description
+         * Update the data in according of the data parameter
+         *
+         * @returns {array} Returns the updated array
+         */
+
+
+        Admin_Person.prototype.$update = function $update(data) {
+            var _this7 = this;
+
+            if (!data) {
+                data = this.getPostData();
             }
-        }, {
-            key: '$signup',
-            value: function $signup(user, data) {
-                return AdminPersonService.signup(user, data);
-            }
-        }]);
+            return this.$put('self', {}, data).then(function (res) {
+                return _this7.constructor(res);
+            });
+        };
+
+        Admin_Person.$query = function $query(params) {
+            return AdminPersonService.query(params);
+        };
+
+        Admin_Person.$block = function $block(company, person, data) {
+            return AdminPersonService.block(company, person, data);
+        };
+
+        Admin_Person.$signup = function $signup(user, data) {
+            return AdminPersonService.signup(user, data);
+        };
+
+        Admin_Person.prototype.$refetch = function $refetch() {
+            var _this8 = this;
+
+            var defer = $q.defer();
+            this.$flush('self');
+            this.$get('self').then(function (res) {
+                _this8.constructor(res);
+                return defer.resolve(_this8);
+            }, function (err) {
+                return defer.reject(err);
+            });
+            return defer.promise;
+        };
 
         return Admin_Person;
     }(PersonModel);
 });
 "use strict";
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -1235,73 +1199,64 @@ angular.module('BB.Models').factory("AdminResourceModel", function ($q, AdminRes
         function Admin_Resource() {
             _classCallCheck(this, Admin_Resource);
 
-            return _possibleConstructorReturn(this, (Admin_Resource.__proto__ || Object.getPrototypeOf(Admin_Resource)).apply(this, arguments));
+            return _possibleConstructorReturn(this, _ResourceModel.apply(this, arguments));
         }
 
-        _createClass(Admin_Resource, [{
-            key: "isAvailable",
+        /***
+         * @ngdoc method
+         * @name isAvailable
+         * @methodOf BB.Models:AdminResource
+         * @param {date=} start The start date of the availability of the resource
+         * @param {date=} end The end date of the availability of the resource
+         * @description
+         * Look up a schedule for a time range to see if this available
+         *
+         * @returns {string} Returns yes if availability of resource is valid
+         */
+        // look up a schedule for a time range to see if this available
+        // currently just checks the date - but chould really check the time too
+        Admin_Resource.prototype.isAvailable = function isAvailable(start, end) {
+            var _this2 = this;
 
+            var str = start.format("YYYY-MM-DD") + "-" + end.format("YYYY-MM-DD");
+            if (!this.availability) {
+                this.availability = {};
+            }
 
-            /***
-             * @ngdoc method
-             * @name isAvailable
-             * @methodOf BB.Models:AdminResource
-             * @param {date=} start The start date of the availability of the resource
-             * @param {date=} end The end date of the availability of the resource
-             * @description
-             * Look up a schedule for a time range to see if this available
-             *
-             * @returns {string} Returns yes if availability of resource is valid
-             */
-            // look up a schedule for a time range to see if this available
-            // currently just checks the date - but chould really check the time too
-            value: function isAvailable(start, end) {
-                var _this2 = this;
-
-                var str = start.format("YYYY-MM-DD") + "-" + end.format("YYYY-MM-DD");
-                if (!this.availability) {
-                    this.availability = {};
-                }
-
-                if (this.availability[str]) {
-                    return this.availability[str] === "Yes";
-                }
-                this.availability[str] = "-";
-
-                if (this.$has('schedule')) {
-                    this.$get('schedule', {
-                        start_date: start.format("YYYY-MM-DD"),
-                        end_date: end.format("YYYY-MM-DD")
-                    }).then(function (sched) {
-                        _this2.availability[str] = "No";
-                        if (sched && sched.dates && sched.dates[start.format("YYYY-MM-DD")] && sched.dates[start.format("YYYY-MM-DD")] !== "None") {
-                            return _this2.availability[str] = "Yes";
-                        }
-                    });
-                } else {
-                    this.availability[str] = "Yes";
-                }
-
+            if (this.availability[str]) {
                 return this.availability[str] === "Yes";
             }
-        }], [{
-            key: "$query",
-            value: function $query(params) {
-                return AdminResourceService.query(params);
+            this.availability[str] = "-";
+
+            if (this.$has('schedule')) {
+                this.$get('schedule', {
+                    start_date: start.format("YYYY-MM-DD"),
+                    end_date: end.format("YYYY-MM-DD")
+                }).then(function (sched) {
+                    _this2.availability[str] = "No";
+                    if (sched && sched.dates && sched.dates[start.format("YYYY-MM-DD")] && sched.dates[start.format("YYYY-MM-DD")] !== "None") {
+                        return _this2.availability[str] = "Yes";
+                    }
+                });
+            } else {
+                this.availability[str] = "Yes";
             }
-        }, {
-            key: "$block",
-            value: function $block(company, resource, data) {
-                return AdminResourceService.block(company, resource, data);
-            }
-        }]);
+
+            return this.availability[str] === "Yes";
+        };
+
+        Admin_Resource.$query = function $query(params) {
+            return AdminResourceService.query(params);
+        };
+
+        Admin_Resource.$block = function $block(company, resource, data) {
+            return AdminResourceService.block(company, resource, data);
+        };
 
         return Admin_Resource;
     }(ResourceModel);
 });
 "use strict";
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -1330,7 +1285,7 @@ angular.module('BB.Models').factory("AdminScheduleModel", function ($q, AdminSch
         function Admin_Schedule(data) {
             _classCallCheck(this, Admin_Schedule);
 
-            return _possibleConstructorReturn(this, (Admin_Schedule.__proto__ || Object.getPrototypeOf(Admin_Schedule)).call(this, data));
+            return _possibleConstructorReturn(this, _BaseModel.call(this, data));
         }
 
         /***
@@ -1344,40 +1299,32 @@ angular.module('BB.Models').factory("AdminScheduleModel", function ($q, AdminSch
          */
 
 
-        _createClass(Admin_Schedule, [{
-            key: "getPostData",
-            value: function getPostData() {
-                var data = {};
-                data.id = this.id;
-                data.rules = this.rules;
-                data.name = this.name;
-                data.company_id = this.company_id;
-                data.duration = this.duration;
-                return data;
-            }
-        }], [{
-            key: "$query",
-            value: function $query(params) {
-                return AdminScheduleService.query(params);
-            }
-        }, {
-            key: "$delete",
-            value: function $delete(schedule) {
-                return AdminScheduleService.delete(schedule);
-            }
-        }, {
-            key: "$update",
-            value: function $update(schedule) {
-                return AdminScheduleService.update(schedule);
-            }
-        }]);
+        Admin_Schedule.prototype.getPostData = function getPostData() {
+            var data = {};
+            data.id = this.id;
+            data.rules = this.rules;
+            data.name = this.name;
+            data.company_id = this.company_id;
+            data.duration = this.duration;
+            return data;
+        };
+
+        Admin_Schedule.$query = function $query(params) {
+            return AdminScheduleService.query(params);
+        };
+
+        Admin_Schedule.$delete = function $delete(schedule) {
+            return AdminScheduleService.delete(schedule);
+        };
+
+        Admin_Schedule.$update = function $update(schedule) {
+            return AdminScheduleService.update(schedule);
+        };
 
         return Admin_Schedule;
     }(BaseModel);
 });
 'use strict';
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -1417,367 +1364,349 @@ angular.module('BB.Models').factory("ScheduleRules", function () {
          */
 
 
-        _createClass(ScheduleRules, [{
-            key: 'addRange',
-            value: function addRange(start, end) {
-                return this.applyFunctionToDateRange(start, end, 'YYYY-MM-DD', this.addRangeToDate);
+        ScheduleRules.prototype.addRange = function addRange(start, end) {
+            return this.applyFunctionToDateRange(start, end, 'YYYY-MM-DD', this.addRangeToDate);
+        };
+
+        /***
+         * @ngdoc method
+         * @name removeRange
+         * @methodOf BB.Models:ScheduleRules
+         * @param {date=} start The start date of the range
+         * @param {date=} end The end date of the range
+         * @description
+         * Remove date range in according of the start and end parameters
+         *
+         * @returns {date} Returns the removed date
+         */
+
+
+        ScheduleRules.prototype.removeRange = function removeRange(start, end) {
+            return this.applyFunctionToDateRange(start, end, 'YYYY-MM-DD', this.removeRangeFromDate);
+        };
+
+        /***
+         * @ngdoc method
+         * @name addWeekdayRange
+         * @methodOf BB.Models:ScheduleRules
+         * @param {date=} start The start date of the range
+         * @param {date=} end The end date of the range
+         * @description
+         * Add week day range in according of the start and end parameters
+         *
+         * @returns {date} Returns the week day
+         */
+
+
+        ScheduleRules.prototype.addWeekdayRange = function addWeekdayRange(start, end) {
+            return this.applyFunctionToDateRange(start, end, 'd', this.addRangeToDate);
+        };
+
+        /***
+         * @ngdoc method
+         * @name removeWeekdayRange
+         * @methodOf BB.Models:ScheduleRules
+         * @param {date=} start The start date of the range
+         * @param {date=} end The end date of the range
+         * @description
+         * Remove week day range in according of the start and end parameters
+         *
+         * @returns {date} Returns removed week day
+         */
+
+
+        ScheduleRules.prototype.removeWeekdayRange = function removeWeekdayRange(start, end) {
+            return this.applyFunctionToDateRange(start, end, 'd', this.removeRangeFromDate);
+        };
+
+        /***
+         * @ngdoc method
+         * @name addRangeToDate
+         * @methodOf BB.Models:ScheduleRules
+         * @param {date=} date The date
+         * @param {array=} range The range of the date
+         * @description
+         * Add range to date in according of the date and range parameters
+         *
+         * @returns {date} Returns the added range of date
+         */
+
+
+        ScheduleRules.prototype.addRangeToDate = function addRangeToDate(date, range) {
+            var ranges = this.rules[date] ? this.rules[date] : [];
+            return this.rules[date] = this.joinRanges(this.insertRange(ranges, range));
+        };
+
+        /***
+         * @ngdoc method
+         * @name removeRangeFromDate
+         * @methodOf BB.Models:ScheduleRules
+         * @param {date=} date The date
+         * @param {array=} range The range of the date
+         * @description
+         * Remove range to date in according of the date and range parameters
+         *
+         * @returns {date} Returns the removed range of date
+         */
+
+
+        ScheduleRules.prototype.removeRangeFromDate = function removeRangeFromDate(date, range) {
+            var ranges = this.rules[date] ? this.rules[date] : [];
+            this.rules[date] = this.joinRanges(this.subtractRange(ranges, range));
+            if (this.rules[date] === '') {
+                return delete this.rules[date];
             }
+        };
 
-            /***
-             * @ngdoc method
-             * @name removeRange
-             * @methodOf BB.Models:ScheduleRules
-             * @param {date=} start The start date of the range
-             * @param {date=} end The end date of the range
-             * @description
-             * Remove date range in according of the start and end parameters
-             *
-             * @returns {date} Returns the removed date
-             */
+        /***
+         * @ngdoc method
+         * @name applyFunctionToDateRange
+         * @methodOf BB.Models:ScheduleRules
+         * @param {date=} start The start date
+         * @param {date=} end The end date
+         * @param {date=} format The format of the range date
+         * @param {object} func The func of the date and range
+         * @description
+         * Apply date range in according of the start, end, format and func parameters
+         *
+         * @returns {array} Returns the rules
+         */
 
-        }, {
-            key: 'removeRange',
-            value: function removeRange(start, end) {
-                return this.applyFunctionToDateRange(start, end, 'YYYY-MM-DD', this.removeRangeFromDate);
-            }
 
-            /***
-             * @ngdoc method
-             * @name addWeekdayRange
-             * @methodOf BB.Models:ScheduleRules
-             * @param {date=} start The start date of the range
-             * @param {date=} end The end date of the range
-             * @description
-             * Add week day range in according of the start and end parameters
-             *
-             * @returns {date} Returns the week day
-             */
+        ScheduleRules.prototype.applyFunctionToDateRange = function applyFunctionToDateRange(start, end, format, func) {
+            var _this = this;
 
-        }, {
-            key: 'addWeekdayRange',
-            value: function addWeekdayRange(start, end) {
-                return this.applyFunctionToDateRange(start, end, 'd', this.addRangeToDate);
-            }
-
-            /***
-             * @ngdoc method
-             * @name removeWeekdayRange
-             * @methodOf BB.Models:ScheduleRules
-             * @param {date=} start The start date of the range
-             * @param {date=} end The end date of the range
-             * @description
-             * Remove week day range in according of the start and end parameters
-             *
-             * @returns {date} Returns removed week day
-             */
-
-        }, {
-            key: 'removeWeekdayRange',
-            value: function removeWeekdayRange(start, end) {
-                return this.applyFunctionToDateRange(start, end, 'd', this.removeRangeFromDate);
-            }
-
-            /***
-             * @ngdoc method
-             * @name addRangeToDate
-             * @methodOf BB.Models:ScheduleRules
-             * @param {date=} date The date
-             * @param {array=} range The range of the date
-             * @description
-             * Add range to date in according of the date and range parameters
-             *
-             * @returns {date} Returns the added range of date
-             */
-
-        }, {
-            key: 'addRangeToDate',
-            value: function addRangeToDate(date, range) {
-                var ranges = this.rules[date] ? this.rules[date] : [];
-                return this.rules[date] = this.joinRanges(this.insertRange(ranges, range));
-            }
-
-            /***
-             * @ngdoc method
-             * @name removeRangeFromDate
-             * @methodOf BB.Models:ScheduleRules
-             * @param {date=} date The date
-             * @param {array=} range The range of the date
-             * @description
-             * Remove range to date in according of the date and range parameters
-             *
-             * @returns {date} Returns the removed range of date
-             */
-
-        }, {
-            key: 'removeRangeFromDate',
-            value: function removeRangeFromDate(date, range) {
-                var ranges = this.rules[date] ? this.rules[date] : [];
-                this.rules[date] = this.joinRanges(this.subtractRange(ranges, range));
-                if (this.rules[date] === '') {
-                    return delete this.rules[date];
-                }
-            }
-
-            /***
-             * @ngdoc method
-             * @name applyFunctionToDateRange
-             * @methodOf BB.Models:ScheduleRules
-             * @param {date=} start The start date
-             * @param {date=} end The end date
-             * @param {date=} format The format of the range date
-             * @param {object} func The func of the date and range
-             * @description
-             * Apply date range in according of the start, end, format and func parameters
-             *
-             * @returns {array} Returns the rules
-             */
-
-        }, {
-            key: 'applyFunctionToDateRange',
-            value: function applyFunctionToDateRange(start, end, format, func) {
-                var _this = this;
-
-                var date = void 0;
-                var days = this.diffInDays(start, end);
-                if (days === 0) {
-                    date = start.format(format);
-                    var range = [start.format('HHmm'), end.format('HHmm')].join('-');
-                    func(date, range);
-                } else {
-                    var end_time = moment(start).endOf('day');
-                    this.applyFunctionToDateRange(start, end_time, format, func);
-                    _.each(__range__(1, days, true), function (i) {
-                        var start_time = void 0;
-                        date = moment(start).add(i, 'days');
-                        if (i === days) {
-                            if (end.hour() !== 0 || end.minute() !== 0) {
-                                start_time = moment(end).startOf('day');
-                                return _this.applyFunctionToDateRange(start_time, end, format, func);
-                            }
-                        } else {
-                            start_time = moment(date).startOf('day');
-                            end_time = moment(date).endOf('day');
-                            return _this.applyFunctionToDateRange(start_time, end_time, format, func);
-                        }
-                    });
-                }
-                return this.rules;
-            }
-
-            /***
-             * @ngdoc method
-             * @name diffInDays
-             * @methodOf BB.Models:ScheduleRules
-             * @param {date=} start The start date
-             * @param {date=} end The end date
-             * @description
-             * Difference in days in according of the start and end parameters
-             *
-             * @returns {array} Returns the difference in days
-             */
-
-        }, {
-            key: 'diffInDays',
-            value: function diffInDays(start, end) {
-                return moment.duration(end.diff(start)).days();
-            }
-
-            /***
-             * @ngdoc method
-             * @name insertRange
-             * @methodOf BB.Models:ScheduleRules
-             * @param {object} ranges The ranges
-             * @param {object} range The range
-             * @description
-             * Insert range in according of the ranges and range parameters
-             *
-             * @returns {array} Returns the ranges
-             */
-
-        }, {
-            key: 'insertRange',
-            value: function insertRange(ranges, range) {
-                ranges.splice(_.sortedIndex(ranges, range), 0, range);
-                return ranges;
-            }
-
-            /***
-             * @ngdoc method
-             * @name subtractRange
-             * @methodOf BB.Models:ScheduleRules
-             * @param {object} ranges The ranges
-             * @param {object} range The range
-             * @description
-             * Substract the range in according of the ranges and range parameters
-             *
-             * @returns {array} Returns the range decreasing
-             */
-
-        }, {
-            key: 'subtractRange',
-            value: function subtractRange(ranges, range) {
-                if (_.indexOf(ranges, range, true) > -1) {
-                    return _.without(ranges, range);
-                } else {
-                    return _.flatten(_.map(ranges, function (r) {
-                        if (range.slice(0, 4) >= r.slice(0, 4) && range.slice(5, 9) <= r.slice(5, 9)) {
-                            if (range.slice(0, 4) === r.slice(0, 4)) {
-                                return [range.slice(5, 9), r.slice(5, 9)].join('-');
-                            } else if (range.slice(5, 9) === r.slice(5, 9)) {
-                                return [r.slice(0, 4), range.slice(0, 4)].join('-');
-                            } else {
-                                return [[r.slice(0, 4), range.slice(0, 4)].join('-'), [range.slice(5, 9), r.slice(5, 9)].join('-')];
-                            }
-                        } else {
-                            return r;
-                        }
-                    }));
-                }
-            }
-
-            /***
-             * @ngdoc method
-             * @name joinRanges
-             * @methodOf BB.Models:ScheduleRules
-             * @param {object} ranges The ranges
-             * @description
-             * Join ranges
-             *
-             * @returns {array} Returns the range
-             */
-
-        }, {
-            key: 'joinRanges',
-            value: function joinRanges(ranges) {
-                return _.reduce(ranges, function (m, range) {
-                    if (m === '') {
-                        return range;
-                    } else if (range.slice(0, 4) <= m.slice(m.length - 4, m.length)) {
-                        if (range.slice(5, 9) >= m.slice(m.length - 4, m.length)) {
-                            return m.slice(0, m.length - 4) + range.slice(5, 9);
-                        } else {
-                            return m;
+            var date = void 0;
+            var days = this.diffInDays(start, end);
+            if (days === 0) {
+                date = start.format(format);
+                var range = [start.format('HHmm'), end.format('HHmm')].join('-');
+                func(date, range);
+            } else {
+                var end_time = moment(start).endOf('day');
+                this.applyFunctionToDateRange(start, end_time, format, func);
+                _.each(__range__(1, days, true), function (i) {
+                    var start_time = void 0;
+                    date = moment(start).add(i, 'days');
+                    if (i === days) {
+                        if (end.hour() !== 0 || end.minute() !== 0) {
+                            start_time = moment(end).startOf('day');
+                            return _this.applyFunctionToDateRange(start_time, end, format, func);
                         }
                     } else {
-                        return [m, range].join();
+                        start_time = moment(date).startOf('day');
+                        end_time = moment(date).endOf('day');
+                        return _this.applyFunctionToDateRange(start_time, end_time, format, func);
                     }
-                }, "").split(',');
-            }
-
-            /***
-             * @ngdoc method
-             * @name filterRulesByDates
-             * @methodOf BB.Models:ScheduleRules
-             * @description
-             * Filter rules by dates
-             *
-             * @returns {array} Returns the filtered rules by dates
-             */
-
-        }, {
-            key: 'filterRulesByDates',
-            value: function filterRulesByDates() {
-                return _.pick(this.rules, function (value, key) {
-                    return key.match(/^\d{4}-\d{2}-\d{2}$/) && value !== "None";
                 });
             }
+            return this.rules;
+        };
 
-            /***
-             * @ngdoc method
-             * @name filterRulesByWeekdays
-             * @methodOf BB.Models:ScheduleRules
-             * @description
-             * Filter rules by week day
-             *
-             * @returns {array} Returns the filtered rules by week day
-             */
+        /***
+         * @ngdoc method
+         * @name diffInDays
+         * @methodOf BB.Models:ScheduleRules
+         * @param {date=} start The start date
+         * @param {date=} end The end date
+         * @description
+         * Difference in days in according of the start and end parameters
+         *
+         * @returns {array} Returns the difference in days
+         */
 
-        }, {
-            key: 'filterRulesByWeekdays',
-            value: function filterRulesByWeekdays() {
-                return _.pick(this.rules, function (value, key) {
-                    return key.match(/^\d$/);
-                });
+
+        ScheduleRules.prototype.diffInDays = function diffInDays(start, end) {
+            return moment.duration(end.diff(start)).days();
+        };
+
+        /***
+         * @ngdoc method
+         * @name insertRange
+         * @methodOf BB.Models:ScheduleRules
+         * @param {object} ranges The ranges
+         * @param {object} range The range
+         * @description
+         * Insert range in according of the ranges and range parameters
+         *
+         * @returns {array} Returns the ranges
+         */
+
+
+        ScheduleRules.prototype.insertRange = function insertRange(ranges, range) {
+            ranges.splice(_.sortedIndex(ranges, range), 0, range);
+            return ranges;
+        };
+
+        /***
+         * @ngdoc method
+         * @name subtractRange
+         * @methodOf BB.Models:ScheduleRules
+         * @param {object} ranges The ranges
+         * @param {object} range The range
+         * @description
+         * Substract the range in according of the ranges and range parameters
+         *
+         * @returns {array} Returns the range decreasing
+         */
+
+
+        ScheduleRules.prototype.subtractRange = function subtractRange(ranges, range) {
+            if (_.indexOf(ranges, range, true) > -1) {
+                return _.without(ranges, range);
+            } else {
+                return _.flatten(_.map(ranges, function (r) {
+                    if (range.slice(0, 4) >= r.slice(0, 4) && range.slice(5, 9) <= r.slice(5, 9)) {
+                        if (range.slice(0, 4) === r.slice(0, 4)) {
+                            return [range.slice(5, 9), r.slice(5, 9)].join('-');
+                        } else if (range.slice(5, 9) === r.slice(5, 9)) {
+                            return [r.slice(0, 4), range.slice(0, 4)].join('-');
+                        } else {
+                            return [[r.slice(0, 4), range.slice(0, 4)].join('-'), [range.slice(5, 9), r.slice(5, 9)].join('-')];
+                        }
+                    } else {
+                        return r;
+                    }
+                }));
             }
+        };
 
-            /***
-             * @ngdoc method
-             * @name formatTime
-             * @methodOf BB.Models:ScheduleRules
-             * @param {date=} time The time
-             * @description
-             * Format the time in according of the time parameter
-             *
-             * @returns {date} Returns the formated time
-             */
+        /***
+         * @ngdoc method
+         * @name joinRanges
+         * @methodOf BB.Models:ScheduleRules
+         * @param {object} ranges The ranges
+         * @description
+         * Join ranges
+         *
+         * @returns {array} Returns the range
+         */
 
-        }, {
-            key: 'formatTime',
-            value: function formatTime(time) {
-                return [time.slice(0, 2), time.slice(2, 4)].join(':');
-            }
 
-            /***
-             * @ngdoc method
-             * @name toEvents
-             * @methodOf BB.Models:ScheduleRules
-             * @param {array} d The day of events
-             * @description
-             * Go to events day
-             *
-             * @returns {array} Returns fullcalendar compatible events
-             */
-
-        }, {
-            key: 'toEvents',
-            value: function toEvents(d) {
-                var _this2 = this;
-
-                if (d && this.rules[d] !== "None") {
-                    return _.map(this.rules[d], function (range) {
-                        return {
-                            start: [d, _this2.formatTime(range.split('-')[0])].join('T'),
-                            end: [d, _this2.formatTime(range.split('-')[1])].join('T')
-                        };
-                    });
+        ScheduleRules.prototype.joinRanges = function joinRanges(ranges) {
+            return _.reduce(ranges, function (m, range) {
+                if (m === '') {
+                    return range;
+                } else if (range.slice(0, 4) <= m.slice(m.length - 4, m.length)) {
+                    if (range.slice(5, 9) >= m.slice(m.length - 4, m.length)) {
+                        return m.slice(0, m.length - 4) + range.slice(5, 9);
+                    } else {
+                        return m;
+                    }
                 } else {
-                    return _.reduce(this.filterRulesByDates(), function (memo, ranges, date) {
-                        return memo.concat(_.map(ranges, function (range) {
-                            return {
-                                start: [date, _this2.formatTime(range.split('-')[0])].join('T'),
-                                end: [date, _this2.formatTime(range.split('-')[1])].join('T')
-                            };
-                        }));
-                    }, []);
+                    return [m, range].join();
                 }
-            }
+            }, "").split(',');
+        };
 
-            /***
-             * @ngdoc method
-             * @name toWeekdayEvents
-             * @methodOf BB.Models:ScheduleRules
-             * @description
-             * Go to events week day
-             *
-             * @returns {array} Returns fullcalendar compatible events
-             */
+        /***
+         * @ngdoc method
+         * @name filterRulesByDates
+         * @methodOf BB.Models:ScheduleRules
+         * @description
+         * Filter rules by dates
+         *
+         * @returns {array} Returns the filtered rules by dates
+         */
 
-        }, {
-            key: 'toWeekdayEvents',
-            value: function toWeekdayEvents() {
-                var _this3 = this;
 
-                return _.reduce(this.filterRulesByWeekdays(), function (memo, ranges, day) {
-                    var date = moment().set('day', day).format('YYYY-MM-DD');
+        ScheduleRules.prototype.filterRulesByDates = function filterRulesByDates() {
+            return _.pick(this.rules, function (value, key) {
+                return key.match(/^\d{4}-\d{2}-\d{2}$/) && value !== "None";
+            });
+        };
+
+        /***
+         * @ngdoc method
+         * @name filterRulesByWeekdays
+         * @methodOf BB.Models:ScheduleRules
+         * @description
+         * Filter rules by week day
+         *
+         * @returns {array} Returns the filtered rules by week day
+         */
+
+
+        ScheduleRules.prototype.filterRulesByWeekdays = function filterRulesByWeekdays() {
+            return _.pick(this.rules, function (value, key) {
+                return key.match(/^\d$/);
+            });
+        };
+
+        /***
+         * @ngdoc method
+         * @name formatTime
+         * @methodOf BB.Models:ScheduleRules
+         * @param {date=} time The time
+         * @description
+         * Format the time in according of the time parameter
+         *
+         * @returns {date} Returns the formated time
+         */
+
+
+        ScheduleRules.prototype.formatTime = function formatTime(time) {
+            return [time.slice(0, 2), time.slice(2, 4)].join(':');
+        };
+
+        /***
+         * @ngdoc method
+         * @name toEvents
+         * @methodOf BB.Models:ScheduleRules
+         * @param {array} d The day of events
+         * @description
+         * Go to events day
+         *
+         * @returns {array} Returns fullcalendar compatible events
+         */
+
+
+        ScheduleRules.prototype.toEvents = function toEvents(d) {
+            var _this2 = this;
+
+            if (d && this.rules[d] !== "None") {
+                return _.map(this.rules[d], function (range) {
+                    return {
+                        start: [d, _this2.formatTime(range.split('-')[0])].join('T'),
+                        end: [d, _this2.formatTime(range.split('-')[1])].join('T')
+                    };
+                });
+            } else {
+                return _.reduce(this.filterRulesByDates(), function (memo, ranges, date) {
                     return memo.concat(_.map(ranges, function (range) {
                         return {
-                            start: [date, _this3.formatTime(range.split('-')[0])].join('T'),
-                            end: [date, _this3.formatTime(range.split('-')[1])].join('T')
+                            start: [date, _this2.formatTime(range.split('-')[0])].join('T'),
+                            end: [date, _this2.formatTime(range.split('-')[1])].join('T')
                         };
                     }));
                 }, []);
             }
-        }]);
+        };
+
+        /***
+         * @ngdoc method
+         * @name toWeekdayEvents
+         * @methodOf BB.Models:ScheduleRules
+         * @description
+         * Go to events week day
+         *
+         * @returns {array} Returns fullcalendar compatible events
+         */
+
+
+        ScheduleRules.prototype.toWeekdayEvents = function toWeekdayEvents() {
+            var _this3 = this;
+
+            return _.reduce(this.filterRulesByWeekdays(), function (memo, ranges, day) {
+                var date = moment().set('day', day).format('YYYY-MM-DD');
+                return memo.concat(_.map(ranges, function (range) {
+                    return {
+                        start: [date, _this3.formatTime(range.split('-')[0])].join('T'),
+                        end: [date, _this3.formatTime(range.split('-')[1])].join('T')
+                    };
+                }));
+            }, []);
+        };
 
         return ScheduleRules;
     }();
@@ -1793,8 +1722,6 @@ function __range__(left, right, inclusive) {
     return range;
 }
 "use strict";
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -1826,15 +1753,12 @@ angular.module('BB.Models').factory("AdminServiceModel", function ($q, AdminServ
         function Admin_Service() {
             _classCallCheck(this, Admin_Service);
 
-            return _possibleConstructorReturn(this, (Admin_Service.__proto__ || Object.getPrototypeOf(Admin_Service)).apply(this, arguments));
+            return _possibleConstructorReturn(this, _ServiceModel.apply(this, arguments));
         }
 
-        _createClass(Admin_Service, null, [{
-            key: "$query",
-            value: function $query(params) {
-                return AdminServiceService.query(params);
-            }
-        }]);
+        Admin_Service.$query = function $query(params) {
+            return AdminServiceService.query(params);
+        };
 
         return Admin_Service;
     }(ServiceModel);
