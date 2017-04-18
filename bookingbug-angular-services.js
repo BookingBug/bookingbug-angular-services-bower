@@ -920,8 +920,44 @@ angular.module('BB.Models').factory("AdminPersonModel", function ($q, AdminPerso
         function Admin_Person(data) {
             _classCallCheck(this, Admin_Person);
 
-            return _possibleConstructorReturn(this, _PersonModel.call(this, data));
+            var _this = _possibleConstructorReturn(this, _PersonModel.call(this, data));
+
+            if (!_this.queuing_disabled) {
+                _this.setCurrentCustomer();
+                if (_this.attendance_status === 2 || _this.attendance_status === 4) {
+                    _this.updateEstimatedReturn();
+                }
+            }
+            return _this;
         }
+
+        /***
+         * @ngdoc method
+         * @name setCurrentCustomer
+         * @methodOf BB.Models:AdminPerson
+         * @description
+         * Set current customer
+         *
+         * @returns {Promise} Returns a promise that rezolve the current customer
+         */
+
+
+        Admin_Person.prototype.setCurrentCustomer = function setCurrentCustomer() {
+            var _this2 = this;
+
+            var defer = $q.defer();
+            if (this.$has('queuer')) {
+                this.$get('queuer').then(function (queuer) {
+                    _this2.serving = new BBModel.Admin.Queuer(queuer);
+                    defer.resolve(_this2.serving);
+                }, function (err) {
+                    return defer.reject(err);
+                });
+            } else {
+                defer.resolve();
+            }
+            return defer.promise;
+        };
 
         /***
          * @ngdoc method
@@ -937,14 +973,18 @@ angular.module('BB.Models').factory("AdminPersonModel", function ($q, AdminPerso
 
 
         Admin_Person.prototype.setAttendance = function setAttendance(status, duration) {
-            var _this2 = this;
+            var _this3 = this;
 
             var defer = $q.defer();
             this.$put('attendance', {}, { status: status, estimated_duration: duration }).then(function (p) {
-                _this2.updateModel(p);
-                return defer.resolve(_this2);
+                _this3.updateModel(p);
+                if (status === 2) {
+                    _this3.updateEstimatedReturn(duration);
+                }
+                if (!_this3.$has('queuer')) _this3.serving = null;
+                defer.resolve(_this3);
             }, function (err) {
-                return defer.reject(err);
+                defer.reject(err);
             });
             return defer.promise;
         };
@@ -961,19 +1001,21 @@ angular.module('BB.Models').factory("AdminPersonModel", function ($q, AdminPerso
 
 
         Admin_Person.prototype.finishServing = function finishServing() {
-            var _this3 = this;
+            var _this4 = this;
 
             var defer = $q.defer();
             if (this.$has('finish_serving')) {
                 this.$flush('self');
                 this.$post('finish_serving').then(function (q) {
-                    _this3.$get('self').then(function (p) {
-                        return _this3.updateModel(p);
+                    _this4.$get('self').then(function (p) {
+                        _this4.updateModel(p);
+                        if (!_this4.$has('queuer')) _this4.serving = null;
+                        defer.resolve(q);
+                    }, function (err) {
+                        defer.reject(err);
                     });
-                    _this3.serving = null;
-                    return defer.resolve(q);
                 }, function (err) {
-                    return defer.reject(err);
+                    defer.reject(err);
                 });
             } else {
                 defer.reject('finish_serving link not available');
@@ -997,7 +1039,7 @@ angular.module('BB.Models').factory("AdminPersonModel", function ($q, AdminPerso
 
 
         Admin_Person.prototype.isAvailable = function isAvailable(start, end) {
-            var _this4 = this;
+            var _this5 = this;
 
             var str = start.format("YYYY-MM-DD") + "-" + end.format("YYYY-MM-DD");
             if (!this.availability) {
@@ -1014,9 +1056,9 @@ angular.module('BB.Models').factory("AdminPersonModel", function ($q, AdminPerso
                     start_date: start.format("YYYY-MM-DD"),
                     end_date: end.format("YYYY-MM-DD")
                 }).then(function (sched) {
-                    _this4.availability[str] = "No";
+                    _this5.availability[str] = "No";
                     if (sched && sched.dates && sched.dates[start.format("YYYY-MM-DD")] && sched.dates[start.format("YYYY-MM-DD")] !== "None") {
-                        return _this4.availability[str] = "Yes";
+                        return _this5.availability[str] = "Yes";
                     }
                 });
             } else {
@@ -1039,18 +1081,20 @@ angular.module('BB.Models').factory("AdminPersonModel", function ($q, AdminPerso
 
 
         Admin_Person.prototype.startServing = function startServing(queuer) {
-            var _this5 = this;
+            var _this6 = this;
 
             var defer = $q.defer();
             if (this.$has('start_serving')) {
                 this.$flush('self');
-                var params = { queuer_id: queuer ? queuer.id : null };
+                var params = { queuer_id: queuer ? queuer.id : null, person_id: this.id };
                 this.$post('start_serving', params).then(function (q) {
-                    _this5.$get('self').then(function (p) {
-                        return _this5.updateModel(p);
+                    _this6.$get('self').then(function (p) {
+                        _this6.updateModel(p);
+                        _this6.serving = q;
+                        defer.resolve(q);
+                    }, function (err) {
+                        return defer.reject(err);
                     });
-                    _this5.serving = q;
-                    return defer.resolve(q);
                 }, function (err) {
                     return defer.reject(err);
                 });
@@ -1072,20 +1116,20 @@ angular.module('BB.Models').factory("AdminPersonModel", function ($q, AdminPerso
 
 
         Admin_Person.prototype.getQueuers = function getQueuers() {
-            var _this6 = this;
+            var _this7 = this;
 
             var defer = $q.defer();
             if (this.$has('queuers')) {
                 this.$flush('queuers');
                 this.$get('queuers').then(function (collection) {
-                    return collection.$get('queuers').then(function (queuers) {
+                    collection.$get('queuers').then(function (queuers) {
                         var models = Array.from(queuers).map(function (q) {
                             return new BBModel.Admin.Queuer(q);
                         });
-                        _this6.queuers = models;
-                        return defer.resolve(models);
+                        _this7.queuers = models;
+                        defer.resolve(models);
                     }, function (err) {
-                        return defer.reject(err);
+                        defer.reject(err);
                     });
                 }, function (err) {
                     return defer.reject(err);
@@ -1094,6 +1138,14 @@ angular.module('BB.Models').factory("AdminPersonModel", function ($q, AdminPerso
                 defer.reject('queuers link not available');
             }
             return defer.promise;
+        };
+
+        Admin_Person.prototype.updateEstimatedReturn = function updateEstimatedReturn(estimate) {
+            var start = this.attendance_started;
+            if (!estimate) estimate = this.attendance_estimate;
+            if (start && estimate) {
+                this.estimated_return = moment(start).add(estimate, 'minutes').format('LT');
+            }
         };
 
         /***
@@ -1129,13 +1181,13 @@ angular.module('BB.Models').factory("AdminPersonModel", function ($q, AdminPerso
 
 
         Admin_Person.prototype.$update = function $update(data) {
-            var _this7 = this;
+            var _this8 = this;
 
             if (!data) {
                 data = this.getPostData();
             }
             return this.$put('self', {}, data).then(function (res) {
-                return _this7.constructor(res);
+                return _this8.constructor(res);
             });
         };
 
@@ -1152,13 +1204,13 @@ angular.module('BB.Models').factory("AdminPersonModel", function ($q, AdminPerso
         };
 
         Admin_Person.prototype.$refetch = function $refetch() {
-            var _this8 = this;
+            var _this9 = this;
 
             var defer = $q.defer();
             this.$flush('self');
             this.$get('self').then(function (res) {
-                _this8.constructor(res);
-                return defer.resolve(_this8);
+                _this9.constructor(res);
+                return defer.resolve(_this9);
             }, function (err) {
                 return defer.reject(err);
             });
