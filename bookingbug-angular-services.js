@@ -635,6 +635,620 @@ angular.module('BBAdminServices').directive('serviceTable', function ($uibModal,
         templateUrl: 'service_table_main.html'
     };
 });
+'use strict';
+
+angular.module('BBAdmin.Services').factory('AdminAddressService', function ($q, BBModel) {
+
+    return {
+        query: function query(params) {
+            var company = params.company;
+
+            var defer = $q.defer();
+            company.$get('addresses').then(function (collection) {
+                return collection.$get('addresses').then(function (addresss) {
+                    var models = Array.from(addresss).map(function (s) {
+                        return new BBModel.Admin.Address(s);
+                    });
+                    return defer.resolve(models);
+                }, function (err) {
+                    return defer.reject(err);
+                });
+            }, function (err) {
+                return defer.reject(err);
+            });
+            return defer.promise;
+        }
+    };
+});
+'use strict';
+
+angular.module('BBAdmin.Services').factory('AdminClinicService', function ($q, BBModel, ClinicCollections, $window) {
+
+    return {
+        query: function query(params) {
+            var company = params.company;
+
+            var defer = $q.defer();
+            if (params.id) {
+                // reuqest for a single one
+                company.$get('clinics', params).then(function (clinic) {
+                    clinic = new BBModel.Admin.Clinic(clinic);
+                    return defer.resolve(clinic);
+                }, function (err) {
+                    return defer.reject(err);
+                });
+            } else {
+                var existing = ClinicCollections.find(params);
+                if (existing && !params.skip_cache) {
+                    defer.resolve(existing);
+                } else {
+                    if (params.skip_cache) {
+                        if (existing) {
+                            ClinicCollections.delete(existing);
+                        }
+                        company.$flush('clinics', params);
+                    }
+                    company.$get('clinics', params).then(function (collection) {
+                        return collection.$get('clinics').then(function (clinics) {
+                            var models = Array.from(clinics).map(function (s) {
+                                return new BBModel.Admin.Clinic(s);
+                            });
+                            clinics = new $window.Collection.Clinic(collection, models, params);
+                            ClinicCollections.add(clinics);
+                            return defer.resolve(clinics);
+                        }, function (err) {
+                            return defer.reject(err);
+                        });
+                    }, function (err) {
+                        return defer.reject(err);
+                    });
+                }
+            }
+            return defer.promise;
+        },
+        create: function create(prms, clinic) {
+            var company = prms.company;
+
+            var deferred = $q.defer();
+            company.$post('clinics', {}, clinic.getPostData()).then(function (clinic) {
+                clinic = new BBModel.Admin.Clinic(clinic);
+                ClinicCollections.checkItems(clinic);
+                return deferred.resolve(clinic);
+            }, function (err) {
+                return deferred.reject(err);
+            });
+            return deferred.promise;
+        },
+        cancel: function cancel(clinic) {
+            var deferred = $q.defer();
+            clinic.$post('cancel', clinic).then(function (clinic) {
+                clinic = new BBModel.Admin.Clinic(clinic);
+                ClinicCollections.deleteItems(clinic);
+                return deferred.resolve(clinic);
+            }, function (err) {
+                return deferred.reject(err);
+            });
+            return deferred.promise;
+        },
+        update: function update(clinic) {
+            var deferred = $q.defer();
+            clinic.$put('self', {}, clinic.getPostData()).then(function (c) {
+                clinic = new BBModel.Admin.Clinic(c);
+                ClinicCollections.checkItems(clinic);
+                return deferred.resolve(clinic);
+            }, function (err) {
+                return deferred.reject(err);
+            });
+            return deferred.promise;
+        }
+    };
+});
+'use strict';
+
+angular.module('BBAdminServices').factory('AdminPersonService', function ($q, $window, $rootScope, halClient, SlotCollections, BookingCollections, BBModel, LoginService, $log) {
+
+    return {
+        query: function query(params) {
+            var company = params.company;
+
+            var defer = $q.defer();
+            if (company.$has('people')) {
+                company.$get('people', params).then(function (collection) {
+                    if (collection.$has('people')) {
+                        return collection.$get('people').then(function (people) {
+                            var models = Array.from(people).map(function (p) {
+                                return new BBModel.Admin.Person(p);
+                            });
+                            return defer.resolve(models);
+                        }, function (err) {
+                            return defer.reject(err);
+                        });
+                    } else {
+                        var obj = new BBModel.Admin.Person(collection);
+                        return defer.resolve(obj);
+                    }
+                }, function (err) {
+                    return defer.reject(err);
+                });
+            } else {
+                $log.warn('company has no people link');
+                defer.reject('company has no people link');
+            }
+            return defer.promise;
+        },
+        block: function block(company, person, data) {
+            var deferred = $q.defer();
+            person.$put('block', {}, data).then(function (response) {
+                if (response.$href('self').indexOf('bookings') > -1) {
+                    var booking = new BBModel.Admin.Booking(response);
+                    BookingCollections.checkItems(booking);
+                    return deferred.resolve(booking);
+                } else {
+                    var slot = new BBModel.Admin.Slot(response);
+                    SlotCollections.checkItems(slot);
+                    return deferred.resolve(slot);
+                }
+            }, function (err) {
+                return deferred.reject(err);
+            });
+            return deferred.promise;
+        },
+        signup: function signup(user, data) {
+            var defer = $q.defer();
+            return user.$get('company').then(function (company) {
+                var params = {};
+                company.$post('people', params, data).then(function (person) {
+                    if (person.$has('administrator')) {
+                        return person.$get('administrator').then(function (user) {
+                            LoginService.setLogin(user);
+                            return defer.resolve(person);
+                        });
+                    } else {
+                        return defer.resolve(person);
+                    }
+                }, function (err) {
+                    return defer.reject(err);
+                });
+                return defer.promise;
+            });
+        }
+    };
+});
+'use strict';
+
+angular.module('BBAdmin.Services').factory('AdminResourceService', function ($q, UriTemplate, halClient, SlotCollections, BBModel, BookingCollections) {
+
+    return {
+        query: function query(params) {
+            var company = params.company;
+
+            var defer = $q.defer();
+            company.$get('resources', params).then(function (collection) {
+                return collection.$get('resources').then(function (resources) {
+                    var models = Array.from(resources).map(function (r) {
+                        return new BBModel.Admin.Resource(r);
+                    });
+                    return defer.resolve(models);
+                }, function (err) {
+                    return defer.reject(err);
+                });
+            }, function (err) {
+                return defer.reject(err);
+            });
+            return defer.promise;
+        },
+        block: function block(company, resource, data) {
+            var deferred = $q.defer();
+            resource.$put('block', {}, data).then(function (response) {
+                if (response.$href('self').indexOf('bookings') > -1) {
+                    var booking = new BBModel.Admin.Booking(response);
+                    BookingCollections.checkItems(booking);
+                    return deferred.resolve(booking);
+                } else {
+                    var slot = new BBModel.Admin.Slot(response);
+                    SlotCollections.checkItems(slot);
+                    return deferred.resolve(slot);
+                }
+            }, function (err) {
+                return deferred.reject(err);
+            });
+            return deferred.promise;
+        }
+    };
+});
+'use strict';
+
+(function () {
+
+    angular.module('BBAdmin.Services').factory('AdminScheduleService', adminScheduleService);
+
+    function adminScheduleService($q, BBModel, ScheduleRules, BBAssets, bbTimeZone) {
+        'ngInject';
+
+        var schedule_cache = {};
+
+        var cacheDates = function cacheDates(asset, dates) {
+            if (!schedule_cache[asset.self]) {
+                schedule_cache[asset.self] = {};
+            }
+            return function () {
+                var result = [];
+                for (var k in dates) {
+                    var v = dates[k];
+                    result.push(schedule_cache[asset.self][k] = v);
+                }
+                return result;
+            }();
+        };
+
+        var getCacheDates = function getCacheDates(asset, start, end) {
+
+            if (!schedule_cache[asset.self]) {
+                return false;
+            }
+
+            var curr = moment(start);
+            var dates = [];
+
+            var asset_cache = schedule_cache[asset.self];
+            while (curr.unix() < end.unix()) {
+                var test = curr.format('YYYY-MM-DD');
+                if (!asset_cache[test]) {
+                    return false;
+                }
+                dates[test] = asset_cache[test];
+                curr = curr.add(1, 'day');
+            }
+
+            return dates;
+        };
+
+        // return a promise to resolve any existing schedule caching stuff
+        var loadScheduleCaches = function loadScheduleCaches(assets) {
+            var proms = [];
+            var _iteratorNormalCompletion = true;
+            var _didIteratorError = false;
+            var _iteratorError = undefined;
+
+            try {
+                for (var _iterator = Array.from(assets)[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                    var asset = _step.value;
+
+                    if (asset.$has('immediate_schedule')) {
+                        (function (asset) {
+                            var prom = asset.$get('immediate_schedule');
+                            proms.push(prom);
+                            return prom.then(function (schedules) {
+                                return cacheDates(asset, schedules.dates);
+                            });
+                        })(asset);
+                    }
+                }
+            } catch (err) {
+                _didIteratorError = true;
+                _iteratorError = err;
+            } finally {
+                try {
+                    if (!_iteratorNormalCompletion && _iterator.return) {
+                        _iterator.return();
+                    }
+                } finally {
+                    if (_didIteratorError) {
+                        throw _iteratorError;
+                    }
+                }
+            }
+
+            var fin = $q.defer();
+            if (proms.length > 0) {
+                $q.all(proms).then(function () {
+                    return fin.resolve();
+                });
+            } else {
+                fin.resolve();
+            }
+            return fin.promise;
+        };
+
+        return {
+            query: function query(params) {
+                var company = params.company;
+
+                var defer = $q.defer();
+                company.$get('schedules').then(function (collection) {
+                    return collection.$get('schedules').then(function (schedules) {
+                        var models = Array.from(schedules).map(function (s) {
+                            return new BBModel.Admin.Schedule(s);
+                        });
+                        return defer.resolve(models);
+                    }, function (err) {
+                        return defer.reject(err);
+                    });
+                }, function (err) {
+                    return defer.reject(err);
+                });
+                return defer.promise;
+            },
+            delete: function _delete(schedule) {
+                var deferred = $q.defer();
+                schedule.$del('self').then(function (schedule) {
+                    schedule = new BBModel.Admin.Schedule(schedule);
+                    return deferred.resolve(schedule);
+                }, function (err) {
+                    return deferred.reject(err);
+                });
+
+                return deferred.promise;
+            },
+            update: function update(schedule) {
+                var deferred = $q.defer();
+                return schedule.$put('self', {}, schedule.getPostData()).then(function (c) {
+                    schedule = new BBModel.Admin.Schedule(c);
+                    return deferred.resolve(schedule);
+                }, function (err) {
+                    return deferred.reject(err);
+                });
+            },
+            mapAssetsToScheduleEvents: function mapAssetsToScheduleEvents(start, end, assets) {
+                var assets_with_schedule = _.filter(assets, function (asset) {
+                    return asset.$has('schedule');
+                });
+
+                var mapEvents = function mapEvents(asset, e) {
+                    e.resourceId = parseInt(asset.id) + "_" + asset.type[0];
+                    e.title = asset.name;
+                    e.rendering = "background";
+
+                    e.start = bbTimeZone.convertToCompany(e.start, true);
+                    e.end = bbTimeZone.convertToCompany(e.end, true);
+
+                    e.start = bbTimeZone.convertToDisplay(e.start);
+                    e.end = bbTimeZone.convertToDisplay(e.end);
+
+                    return e;
+                };
+
+                return _.map(assets_with_schedule, function (asset) {
+
+                    var events = void 0,
+                        rules = void 0;
+                    var found = getCacheDates(asset, start, end);
+                    if (found) {
+                        rules = new ScheduleRules(found);
+                        events = rules.toEvents();
+                        _.each(events, mapEvents.bind(null, asset));
+                        var prom = $q.defer();
+                        prom.resolve(events);
+                        return prom.promise;
+                    } else {
+                        var params = {
+                            start_date: start.format('YYYY-MM-DD'),
+                            end_date: end.format('YYYY-MM-DD')
+                        };
+
+                        return asset.$get('schedule', params).then(function (schedules) {
+                            // cacheDates(asset, schedules.dates)
+                            rules = new ScheduleRules(schedules.dates);
+                            events = rules.toEvents();
+                            _.each(events, mapEvents.bind(null, asset));
+                            return events;
+                        });
+                    }
+                });
+            },
+            getAssetsScheduleEvents: function getAssetsScheduleEvents(company, start, end, filtered, requested) {
+                var _this = this;
+
+                if (filtered == null) {
+                    filtered = false;
+                }
+                if (requested == null) {
+                    requested = [];
+                }
+                if (filtered) {
+                    return loadScheduleCaches(requested).then(function () {
+                        return $q.all(_this.mapAssetsToScheduleEvents(start, end, requested)).then(function (schedules) {
+                            return _.flatten(schedules);
+                        });
+                    });
+                } else {
+                    var localMethod = this.mapAssetsToScheduleEvents;
+                    return BBAssets.getAssets(company).then(function (assets) {
+                        return loadScheduleCaches(assets).then(function () {
+                            return $q.all(localMethod(start, end, assets)).then(function (schedules) {
+                                return _.flatten(schedules);
+                            });
+                        });
+                    });
+                }
+            }
+        };
+    }
+})();
+'use strict';
+
+angular.module('BBAdmin.Services').factory('AdminServiceService', function ($q, BBModel, $log) {
+
+    return {
+        query: function query(params) {
+            var company = params.company;
+
+            var defer = $q.defer();
+            company.$get('services').then(function (collection) {
+                return collection.$get('services').then(function (services) {
+                    var models = Array.from(services).map(function (s) {
+                        return new BBModel.Admin.Service(s);
+                    });
+                    return defer.resolve(models);
+                }, function (err) {
+                    return defer.reject(err);
+                });
+            }, function (err) {
+                return defer.reject(err);
+            });
+            return defer.promise;
+        }
+    };
+});
+'use strict';
+
+angular.module('BBAdminServices').factory("BB.Service.schedule", function ($q, BBModel) {
+    return {
+        unwrap: function unwrap(resource) {
+            return new BBModel.Admin.Schedule(resource);
+        }
+    };
+});
+
+angular.module('BBAdminServices').factory("BB.Service.person", function ($q, BBModel) {
+    return {
+        unwrap: function unwrap(resource) {
+            return new BBModel.Admin.Person(resource);
+        }
+    };
+});
+
+angular.module('BBAdminServices').factory("BB.Service.people", function ($q, BBModel) {
+    return {
+        promise: true,
+        unwrap: function unwrap(resource) {
+            var deferred = $q.defer();
+            resource.$get('people').then(function (items) {
+                var models = [];
+                var _iteratorNormalCompletion = true;
+                var _didIteratorError = false;
+                var _iteratorError = undefined;
+
+                try {
+                    for (var _iterator = Array.from(items)[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                        var i = _step.value;
+
+                        models.push(new BBModel.Admin.Person(i));
+                    }
+                } catch (err) {
+                    _didIteratorError = true;
+                    _iteratorError = err;
+                } finally {
+                    try {
+                        if (!_iteratorNormalCompletion && _iterator.return) {
+                            _iterator.return();
+                        }
+                    } finally {
+                        if (_didIteratorError) {
+                            throw _iteratorError;
+                        }
+                    }
+                }
+
+                return deferred.resolve(models);
+            }, function (err) {
+                return deferred.reject(err);
+            });
+
+            return deferred.promise;
+        }
+    };
+});
+
+angular.module('BBAdminServices').factory("BB.Service.resource", function ($q, BBModel) {
+    return {
+        unwrap: function unwrap(resource) {
+            return new BBModel.Admin.Resource(resource);
+        }
+    };
+});
+
+angular.module('BBAdminServices').factory("BB.Service.resources", function ($q, BBModel) {
+    return {
+        promise: true,
+        unwrap: function unwrap(resource) {
+            var deferred = $q.defer();
+            resource.$get('resources').then(function (items) {
+                var models = [];
+                var _iteratorNormalCompletion2 = true;
+                var _didIteratorError2 = false;
+                var _iteratorError2 = undefined;
+
+                try {
+                    for (var _iterator2 = Array.from(items)[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+                        var i = _step2.value;
+
+                        models.push(new BBModel.Admin.Resource(i));
+                    }
+                } catch (err) {
+                    _didIteratorError2 = true;
+                    _iteratorError2 = err;
+                } finally {
+                    try {
+                        if (!_iteratorNormalCompletion2 && _iterator2.return) {
+                            _iterator2.return();
+                        }
+                    } finally {
+                        if (_didIteratorError2) {
+                            throw _iteratorError2;
+                        }
+                    }
+                }
+
+                return deferred.resolve(models);
+            }, function (err) {
+                return deferred.reject(err);
+            });
+
+            return deferred.promise;
+        }
+    };
+});
+
+angular.module('BBAdminServices').factory("BB.Service.service", function ($q, BBModel) {
+    return {
+        unwrap: function unwrap(resource) {
+            return new BBModel.Admin.Service(resource);
+        }
+    };
+});
+
+angular.module('BBAdminServices').factory("BB.Service.services", function ($q, BBModel) {
+    return {
+        promise: true,
+        unwrap: function unwrap(resource) {
+            var deferred = $q.defer();
+            resource.$get('services').then(function (items) {
+                var models = [];
+                var _iteratorNormalCompletion3 = true;
+                var _didIteratorError3 = false;
+                var _iteratorError3 = undefined;
+
+                try {
+                    for (var _iterator3 = Array.from(items)[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+                        var i = _step3.value;
+
+                        models.push(new BBModel.Admin.Service(i));
+                    }
+                } catch (err) {
+                    _didIteratorError3 = true;
+                    _iteratorError3 = err;
+                } finally {
+                    try {
+                        if (!_iteratorNormalCompletion3 && _iterator3.return) {
+                            _iterator3.return();
+                        }
+                    } finally {
+                        if (_didIteratorError3) {
+                            throw _iteratorError3;
+                        }
+                    }
+                }
+
+                return deferred.resolve(models);
+            }, function (err) {
+                return deferred.reject(err);
+            });
+
+            return deferred.promise;
+        }
+    };
+});
 "use strict";
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -1822,620 +2436,6 @@ angular.module('BB.Models').factory("AdminServiceModel", function ($q, AdminServ
 
         return Admin_Service;
     }(ServiceModel);
-});
-'use strict';
-
-angular.module('BBAdmin.Services').factory('AdminAddressService', function ($q, BBModel) {
-
-    return {
-        query: function query(params) {
-            var company = params.company;
-
-            var defer = $q.defer();
-            company.$get('addresses').then(function (collection) {
-                return collection.$get('addresses').then(function (addresss) {
-                    var models = Array.from(addresss).map(function (s) {
-                        return new BBModel.Admin.Address(s);
-                    });
-                    return defer.resolve(models);
-                }, function (err) {
-                    return defer.reject(err);
-                });
-            }, function (err) {
-                return defer.reject(err);
-            });
-            return defer.promise;
-        }
-    };
-});
-'use strict';
-
-angular.module('BBAdmin.Services').factory('AdminClinicService', function ($q, BBModel, ClinicCollections, $window) {
-
-    return {
-        query: function query(params) {
-            var company = params.company;
-
-            var defer = $q.defer();
-            if (params.id) {
-                // reuqest for a single one
-                company.$get('clinics', params).then(function (clinic) {
-                    clinic = new BBModel.Admin.Clinic(clinic);
-                    return defer.resolve(clinic);
-                }, function (err) {
-                    return defer.reject(err);
-                });
-            } else {
-                var existing = ClinicCollections.find(params);
-                if (existing && !params.skip_cache) {
-                    defer.resolve(existing);
-                } else {
-                    if (params.skip_cache) {
-                        if (existing) {
-                            ClinicCollections.delete(existing);
-                        }
-                        company.$flush('clinics', params);
-                    }
-                    company.$get('clinics', params).then(function (collection) {
-                        return collection.$get('clinics').then(function (clinics) {
-                            var models = Array.from(clinics).map(function (s) {
-                                return new BBModel.Admin.Clinic(s);
-                            });
-                            clinics = new $window.Collection.Clinic(collection, models, params);
-                            ClinicCollections.add(clinics);
-                            return defer.resolve(clinics);
-                        }, function (err) {
-                            return defer.reject(err);
-                        });
-                    }, function (err) {
-                        return defer.reject(err);
-                    });
-                }
-            }
-            return defer.promise;
-        },
-        create: function create(prms, clinic) {
-            var company = prms.company;
-
-            var deferred = $q.defer();
-            company.$post('clinics', {}, clinic.getPostData()).then(function (clinic) {
-                clinic = new BBModel.Admin.Clinic(clinic);
-                ClinicCollections.checkItems(clinic);
-                return deferred.resolve(clinic);
-            }, function (err) {
-                return deferred.reject(err);
-            });
-            return deferred.promise;
-        },
-        cancel: function cancel(clinic) {
-            var deferred = $q.defer();
-            clinic.$post('cancel', clinic).then(function (clinic) {
-                clinic = new BBModel.Admin.Clinic(clinic);
-                ClinicCollections.deleteItems(clinic);
-                return deferred.resolve(clinic);
-            }, function (err) {
-                return deferred.reject(err);
-            });
-            return deferred.promise;
-        },
-        update: function update(clinic) {
-            var deferred = $q.defer();
-            clinic.$put('self', {}, clinic.getPostData()).then(function (c) {
-                clinic = new BBModel.Admin.Clinic(c);
-                ClinicCollections.checkItems(clinic);
-                return deferred.resolve(clinic);
-            }, function (err) {
-                return deferred.reject(err);
-            });
-            return deferred.promise;
-        }
-    };
-});
-'use strict';
-
-angular.module('BBAdminServices').factory('AdminPersonService', function ($q, $window, $rootScope, halClient, SlotCollections, BookingCollections, BBModel, LoginService, $log) {
-
-    return {
-        query: function query(params) {
-            var company = params.company;
-
-            var defer = $q.defer();
-            if (company.$has('people')) {
-                company.$get('people', params).then(function (collection) {
-                    if (collection.$has('people')) {
-                        return collection.$get('people').then(function (people) {
-                            var models = Array.from(people).map(function (p) {
-                                return new BBModel.Admin.Person(p);
-                            });
-                            return defer.resolve(models);
-                        }, function (err) {
-                            return defer.reject(err);
-                        });
-                    } else {
-                        var obj = new BBModel.Admin.Person(collection);
-                        return defer.resolve(obj);
-                    }
-                }, function (err) {
-                    return defer.reject(err);
-                });
-            } else {
-                $log.warn('company has no people link');
-                defer.reject('company has no people link');
-            }
-            return defer.promise;
-        },
-        block: function block(company, person, data) {
-            var deferred = $q.defer();
-            person.$put('block', {}, data).then(function (response) {
-                if (response.$href('self').indexOf('bookings') > -1) {
-                    var booking = new BBModel.Admin.Booking(response);
-                    BookingCollections.checkItems(booking);
-                    return deferred.resolve(booking);
-                } else {
-                    var slot = new BBModel.Admin.Slot(response);
-                    SlotCollections.checkItems(slot);
-                    return deferred.resolve(slot);
-                }
-            }, function (err) {
-                return deferred.reject(err);
-            });
-            return deferred.promise;
-        },
-        signup: function signup(user, data) {
-            var defer = $q.defer();
-            return user.$get('company').then(function (company) {
-                var params = {};
-                company.$post('people', params, data).then(function (person) {
-                    if (person.$has('administrator')) {
-                        return person.$get('administrator').then(function (user) {
-                            LoginService.setLogin(user);
-                            return defer.resolve(person);
-                        });
-                    } else {
-                        return defer.resolve(person);
-                    }
-                }, function (err) {
-                    return defer.reject(err);
-                });
-                return defer.promise;
-            });
-        }
-    };
-});
-'use strict';
-
-angular.module('BBAdmin.Services').factory('AdminResourceService', function ($q, UriTemplate, halClient, SlotCollections, BBModel, BookingCollections) {
-
-    return {
-        query: function query(params) {
-            var company = params.company;
-
-            var defer = $q.defer();
-            company.$get('resources', params).then(function (collection) {
-                return collection.$get('resources').then(function (resources) {
-                    var models = Array.from(resources).map(function (r) {
-                        return new BBModel.Admin.Resource(r);
-                    });
-                    return defer.resolve(models);
-                }, function (err) {
-                    return defer.reject(err);
-                });
-            }, function (err) {
-                return defer.reject(err);
-            });
-            return defer.promise;
-        },
-        block: function block(company, resource, data) {
-            var deferred = $q.defer();
-            resource.$put('block', {}, data).then(function (response) {
-                if (response.$href('self').indexOf('bookings') > -1) {
-                    var booking = new BBModel.Admin.Booking(response);
-                    BookingCollections.checkItems(booking);
-                    return deferred.resolve(booking);
-                } else {
-                    var slot = new BBModel.Admin.Slot(response);
-                    SlotCollections.checkItems(slot);
-                    return deferred.resolve(slot);
-                }
-            }, function (err) {
-                return deferred.reject(err);
-            });
-            return deferred.promise;
-        }
-    };
-});
-'use strict';
-
-(function () {
-
-    angular.module('BBAdmin.Services').factory('AdminScheduleService', adminScheduleService);
-
-    function adminScheduleService($q, BBModel, ScheduleRules, BBAssets, bbTimeZone) {
-        'ngInject';
-
-        var schedule_cache = {};
-
-        var cacheDates = function cacheDates(asset, dates) {
-            if (!schedule_cache[asset.self]) {
-                schedule_cache[asset.self] = {};
-            }
-            return function () {
-                var result = [];
-                for (var k in dates) {
-                    var v = dates[k];
-                    result.push(schedule_cache[asset.self][k] = v);
-                }
-                return result;
-            }();
-        };
-
-        var getCacheDates = function getCacheDates(asset, start, end) {
-
-            if (!schedule_cache[asset.self]) {
-                return false;
-            }
-
-            var curr = moment(start);
-            var dates = [];
-
-            var asset_cache = schedule_cache[asset.self];
-            while (curr.unix() < end.unix()) {
-                var test = curr.format('YYYY-MM-DD');
-                if (!asset_cache[test]) {
-                    return false;
-                }
-                dates[test] = asset_cache[test];
-                curr = curr.add(1, 'day');
-            }
-
-            return dates;
-        };
-
-        // return a promise to resolve any existing schedule caching stuff
-        var loadScheduleCaches = function loadScheduleCaches(assets) {
-            var proms = [];
-            var _iteratorNormalCompletion = true;
-            var _didIteratorError = false;
-            var _iteratorError = undefined;
-
-            try {
-                for (var _iterator = Array.from(assets)[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-                    var asset = _step.value;
-
-                    if (asset.$has('immediate_schedule')) {
-                        (function (asset) {
-                            var prom = asset.$get('immediate_schedule');
-                            proms.push(prom);
-                            return prom.then(function (schedules) {
-                                return cacheDates(asset, schedules.dates);
-                            });
-                        })(asset);
-                    }
-                }
-            } catch (err) {
-                _didIteratorError = true;
-                _iteratorError = err;
-            } finally {
-                try {
-                    if (!_iteratorNormalCompletion && _iterator.return) {
-                        _iterator.return();
-                    }
-                } finally {
-                    if (_didIteratorError) {
-                        throw _iteratorError;
-                    }
-                }
-            }
-
-            var fin = $q.defer();
-            if (proms.length > 0) {
-                $q.all(proms).then(function () {
-                    return fin.resolve();
-                });
-            } else {
-                fin.resolve();
-            }
-            return fin.promise;
-        };
-
-        return {
-            query: function query(params) {
-                var company = params.company;
-
-                var defer = $q.defer();
-                company.$get('schedules').then(function (collection) {
-                    return collection.$get('schedules').then(function (schedules) {
-                        var models = Array.from(schedules).map(function (s) {
-                            return new BBModel.Admin.Schedule(s);
-                        });
-                        return defer.resolve(models);
-                    }, function (err) {
-                        return defer.reject(err);
-                    });
-                }, function (err) {
-                    return defer.reject(err);
-                });
-                return defer.promise;
-            },
-            delete: function _delete(schedule) {
-                var deferred = $q.defer();
-                schedule.$del('self').then(function (schedule) {
-                    schedule = new BBModel.Admin.Schedule(schedule);
-                    return deferred.resolve(schedule);
-                }, function (err) {
-                    return deferred.reject(err);
-                });
-
-                return deferred.promise;
-            },
-            update: function update(schedule) {
-                var deferred = $q.defer();
-                return schedule.$put('self', {}, schedule.getPostData()).then(function (c) {
-                    schedule = new BBModel.Admin.Schedule(c);
-                    return deferred.resolve(schedule);
-                }, function (err) {
-                    return deferred.reject(err);
-                });
-            },
-            mapAssetsToScheduleEvents: function mapAssetsToScheduleEvents(start, end, assets) {
-                var assets_with_schedule = _.filter(assets, function (asset) {
-                    return asset.$has('schedule');
-                });
-
-                var mapEvents = function mapEvents(asset, e) {
-                    e.resourceId = parseInt(asset.id) + "_" + asset.type[0];
-                    e.title = asset.name;
-                    e.rendering = "background";
-
-                    e.start = bbTimeZone.convertToCompany(e.start, true);
-                    e.end = bbTimeZone.convertToCompany(e.end, true);
-
-                    e.start = bbTimeZone.convertToDisplay(e.start);
-                    e.end = bbTimeZone.convertToDisplay(e.end);
-
-                    return e;
-                };
-
-                return _.map(assets_with_schedule, function (asset) {
-
-                    var events = void 0,
-                        rules = void 0;
-                    var found = getCacheDates(asset, start, end);
-                    if (found) {
-                        rules = new ScheduleRules(found);
-                        events = rules.toEvents();
-                        _.each(events, mapEvents.bind(null, asset));
-                        var prom = $q.defer();
-                        prom.resolve(events);
-                        return prom.promise;
-                    } else {
-                        var params = {
-                            start_date: start.format('YYYY-MM-DD'),
-                            end_date: end.format('YYYY-MM-DD')
-                        };
-
-                        return asset.$get('schedule', params).then(function (schedules) {
-                            // cacheDates(asset, schedules.dates)
-                            rules = new ScheduleRules(schedules.dates);
-                            events = rules.toEvents();
-                            _.each(events, mapEvents.bind(null, asset));
-                            return events;
-                        });
-                    }
-                });
-            },
-            getAssetsScheduleEvents: function getAssetsScheduleEvents(company, start, end, filtered, requested) {
-                var _this = this;
-
-                if (filtered == null) {
-                    filtered = false;
-                }
-                if (requested == null) {
-                    requested = [];
-                }
-                if (filtered) {
-                    return loadScheduleCaches(requested).then(function () {
-                        return $q.all(_this.mapAssetsToScheduleEvents(start, end, requested)).then(function (schedules) {
-                            return _.flatten(schedules);
-                        });
-                    });
-                } else {
-                    var localMethod = this.mapAssetsToScheduleEvents;
-                    return BBAssets.getAssets(company).then(function (assets) {
-                        return loadScheduleCaches(assets).then(function () {
-                            return $q.all(localMethod(start, end, assets)).then(function (schedules) {
-                                return _.flatten(schedules);
-                            });
-                        });
-                    });
-                }
-            }
-        };
-    }
-})();
-'use strict';
-
-angular.module('BBAdmin.Services').factory('AdminServiceService', function ($q, BBModel, $log) {
-
-    return {
-        query: function query(params) {
-            var company = params.company;
-
-            var defer = $q.defer();
-            company.$get('services').then(function (collection) {
-                return collection.$get('services').then(function (services) {
-                    var models = Array.from(services).map(function (s) {
-                        return new BBModel.Admin.Service(s);
-                    });
-                    return defer.resolve(models);
-                }, function (err) {
-                    return defer.reject(err);
-                });
-            }, function (err) {
-                return defer.reject(err);
-            });
-            return defer.promise;
-        }
-    };
-});
-'use strict';
-
-angular.module('BBAdminServices').factory("BB.Service.schedule", function ($q, BBModel) {
-    return {
-        unwrap: function unwrap(resource) {
-            return new BBModel.Admin.Schedule(resource);
-        }
-    };
-});
-
-angular.module('BBAdminServices').factory("BB.Service.person", function ($q, BBModel) {
-    return {
-        unwrap: function unwrap(resource) {
-            return new BBModel.Admin.Person(resource);
-        }
-    };
-});
-
-angular.module('BBAdminServices').factory("BB.Service.people", function ($q, BBModel) {
-    return {
-        promise: true,
-        unwrap: function unwrap(resource) {
-            var deferred = $q.defer();
-            resource.$get('people').then(function (items) {
-                var models = [];
-                var _iteratorNormalCompletion = true;
-                var _didIteratorError = false;
-                var _iteratorError = undefined;
-
-                try {
-                    for (var _iterator = Array.from(items)[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-                        var i = _step.value;
-
-                        models.push(new BBModel.Admin.Person(i));
-                    }
-                } catch (err) {
-                    _didIteratorError = true;
-                    _iteratorError = err;
-                } finally {
-                    try {
-                        if (!_iteratorNormalCompletion && _iterator.return) {
-                            _iterator.return();
-                        }
-                    } finally {
-                        if (_didIteratorError) {
-                            throw _iteratorError;
-                        }
-                    }
-                }
-
-                return deferred.resolve(models);
-            }, function (err) {
-                return deferred.reject(err);
-            });
-
-            return deferred.promise;
-        }
-    };
-});
-
-angular.module('BBAdminServices').factory("BB.Service.resource", function ($q, BBModel) {
-    return {
-        unwrap: function unwrap(resource) {
-            return new BBModel.Admin.Resource(resource);
-        }
-    };
-});
-
-angular.module('BBAdminServices').factory("BB.Service.resources", function ($q, BBModel) {
-    return {
-        promise: true,
-        unwrap: function unwrap(resource) {
-            var deferred = $q.defer();
-            resource.$get('resources').then(function (items) {
-                var models = [];
-                var _iteratorNormalCompletion2 = true;
-                var _didIteratorError2 = false;
-                var _iteratorError2 = undefined;
-
-                try {
-                    for (var _iterator2 = Array.from(items)[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-                        var i = _step2.value;
-
-                        models.push(new BBModel.Admin.Resource(i));
-                    }
-                } catch (err) {
-                    _didIteratorError2 = true;
-                    _iteratorError2 = err;
-                } finally {
-                    try {
-                        if (!_iteratorNormalCompletion2 && _iterator2.return) {
-                            _iterator2.return();
-                        }
-                    } finally {
-                        if (_didIteratorError2) {
-                            throw _iteratorError2;
-                        }
-                    }
-                }
-
-                return deferred.resolve(models);
-            }, function (err) {
-                return deferred.reject(err);
-            });
-
-            return deferred.promise;
-        }
-    };
-});
-
-angular.module('BBAdminServices').factory("BB.Service.service", function ($q, BBModel) {
-    return {
-        unwrap: function unwrap(resource) {
-            return new BBModel.Admin.Service(resource);
-        }
-    };
-});
-
-angular.module('BBAdminServices').factory("BB.Service.services", function ($q, BBModel) {
-    return {
-        promise: true,
-        unwrap: function unwrap(resource) {
-            var deferred = $q.defer();
-            resource.$get('services').then(function (items) {
-                var models = [];
-                var _iteratorNormalCompletion3 = true;
-                var _didIteratorError3 = false;
-                var _iteratorError3 = undefined;
-
-                try {
-                    for (var _iterator3 = Array.from(items)[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
-                        var i = _step3.value;
-
-                        models.push(new BBModel.Admin.Service(i));
-                    }
-                } catch (err) {
-                    _didIteratorError3 = true;
-                    _iteratorError3 = err;
-                } finally {
-                    try {
-                        if (!_iteratorNormalCompletion3 && _iterator3.return) {
-                            _iterator3.return();
-                        }
-                    } finally {
-                        if (_didIteratorError3) {
-                            throw _iteratorError3;
-                        }
-                    }
-                }
-
-                return deferred.resolve(models);
-            }, function (err) {
-                return deferred.reject(err);
-            });
-
-            return deferred.promise;
-        }
-    };
 });
 "use strict";
 
