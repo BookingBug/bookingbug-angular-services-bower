@@ -913,7 +913,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
  * @property {integer} order The person order
  */ //
 
-angular.module('BB.Models').factory("AdminPersonModel", function ($q, AdminPersonService, BBModel, BaseModel, PersonModel) {
+angular.module('BB.Models').factory("AdminPersonModel", function ($q, AdminPersonService, BBModel, BaseModel, PersonModel, MutexService) {
     return function (_PersonModel) {
         _inherits(Admin_Person, _PersonModel);
 
@@ -1003,23 +1003,31 @@ angular.module('BB.Models').factory("AdminPersonModel", function ($q, AdminPerso
         Admin_Person.prototype.finishServing = function finishServing() {
             var _this4 = this;
 
+            this.attendance_status = 1; // immeditley mark this as available
+            this.serving = null;
             var defer = $q.defer();
-            if (this.$has('finish_serving')) {
-                this.$flush('self');
-                this.$post('finish_serving').then(function (q) {
-                    _this4.$get('self').then(function (p) {
-                        _this4.updateModel(p);
-                        if (!_this4.$has('queuer')) _this4.serving = null;
-                        defer.resolve(q);
+            MutexService.getLock().then(function (mutex) {
+                if (_this4.$has('finish_serving')) {
+                    _this4.$flush('self');
+                    _this4.$post('finish_serving').then(function (q) {
+                        _this4.$get('self').then(function (p) {
+                            _this4.updateModel(p);
+                            if (!_this4.$has('queuer')) _this4.serving = null;
+                            defer.resolve(q);
+                            MutexService.unlock(mutex);
+                        }, function (err) {
+                            defer.reject(err);
+                            MutexService.unlock(mutex);
+                        });
                     }, function (err) {
                         defer.reject(err);
+                        MutexService.unlock(mutex);
                     });
-                }, function (err) {
-                    defer.reject(err);
-                });
-            } else {
-                defer.reject('finish_serving link not available');
-            }
+                } else {
+                    defer.reject('finish_serving link not available');
+                    MutexService.unlock(mutex);
+                }
+            });
             return defer.promise;
         };
 
@@ -1084,23 +1092,29 @@ angular.module('BB.Models').factory("AdminPersonModel", function ($q, AdminPerso
             var _this6 = this;
 
             var defer = $q.defer();
-            if (this.$has('start_serving')) {
-                this.$flush('self');
-                var params = { queuer_id: queuer ? queuer.id : null, person_id: this.id };
-                this.$post('start_serving', params).then(function (q) {
-                    _this6.$get('self').then(function (p) {
-                        _this6.updateModel(p);
-                        _this6.serving = new BBModel.Admin.Queuer(q);
-                        defer.resolve(_this6.serving);
+            MutexService.getLock().then(function (mutex) {
+                if (_this6.$has('start_serving')) {
+                    _this6.$flush('self');
+                    var params = { queuer_id: queuer ? queuer.id : null, person_id: _this6.id };
+                    _this6.$post('start_serving', params).then(function (q) {
+                        _this6.$get('self').then(function (p) {
+                            _this6.updateModel(p);
+                            _this6.serving = new BBModel.Admin.Queuer(q);
+                            defer.resolve(_this6.serving);
+                            MutexService.unlock(mutex);
+                        }, function (err) {
+                            MutexService.unlock(mutex);
+                            return defer.reject(err);
+                        });
                     }, function (err) {
+                        MutexService.unlock(mutex);
                         return defer.reject(err);
                     });
-                }, function (err) {
-                    return defer.reject(err);
-                });
-            } else {
-                defer.reject('start_serving link not available');
-            }
+                } else {
+                    defer.reject('start_serving link not available');
+                    MutexService.unlock(mutex);
+                }
+            });
             return defer.promise;
         };
 
